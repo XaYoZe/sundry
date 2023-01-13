@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>变换(使用变换矩阵)</title>
+  <style>
+  </style>
+</head>
+
+<body>
+  <canvas id="cav" width="500" height="500"></canvas>
+  <div class="ui">
+    <label for="scaleX">缩放X</label><input id="scaleX" min="-2" max="2" step="0.1" type="range" value="1">
+    <label for="scaleY">缩放Y</label><input id="scaleY" min="-2" max="2" step="0.1" type="range" value="1">
+    <br />
+    <label for="moveX">移动X</label><input id="moveX" min="0" max="450" step="0.1" type="range" value="200">
+    <label for="moveY">移动Y</label><input id="moveY" min="0" max="450" step="0.1" type="range" value="200">
+    <br />
+    <label for="rotate">旋转</label><input id="rotate" min="0" max="360" step="1" type="range" value="0">
+</div>
+</body>
+<script src="./common.js"></script>
+<script type="notjs" id="vertex_shader_source">
+  // 设置浮点数精度为中等精度
+  precision mediump float;
+  // 接收点在 canvas 坐标系上的坐标(x, y)
+  attribute vec2 a_Position;
+  // 接收 canvas 的宽高尺寸
+  attribute vec2 a_Screen_Size;
+  // 接收移动坐标
+  attribute vec2 a_Move;
+  // 接受缩放大小
+  attribute vec2 a_Scale;
+  // 接受旋转角度
+  attribute vec2 a_Rotate;
+  // 接受旋转角度
+  attribute vec2 a_Origin;
+  void main () {
+    // 像素坐标转裁剪空间坐标
+    mat3 projection = mat3(2.0 / a_Screen_Size.x, 0, 0, 0, -2.0 / a_Screen_Size.y, 0, -1, 1, 1);
+    // 旋转矩阵
+    mat3 rotateMat = mat3(a_Rotate.y, -a_Rotate.x, 0, a_Rotate.x, a_Rotate.y, 0, 0, 0, 1);
+    // 缩放矩阵
+    mat3 scaleMat = mat3(a_Scale.x, 0, 0, 0, a_Scale.y, 0, 0, 0, 1);
+    // 移动矩阵
+    mat3 moveMat = mat3(1, 0, 0, 0, 1, 0, a_Move.x, a_Move.y, 1);
+    // 矩阵相乘, 顺序影响结果
+    mat3 matrix = projection * moveMat * rotateMat * scaleMat;
+    vec4 position = vec4(matrix * vec3(a_Position + a_Origin, 1), 1.0);
+    gl_Position = position;
+  }
+
+</script>
+<script type="notjs" id="fragment_shader_source">
+  // 设置浮点数精度为中等精度
+  precision mediump float;
+  // 接收 javaScript 传过来的颜色值 rbga;
+  uniform vec4 u_Color;
+
+  void main () {
+    // 颜色转为[0, 1]的区间的值
+    vec4 color = u_Color / vec4(225, 225, 225, 1);
+    // 设置填充颜色
+    gl_FragColor = color;
+  }
+</script>
+<script>
+
+  // 生成随机颜色
+  function randomColor() {
+    var r = parseInt(Math.random() * 255);
+    var g = parseInt(Math.random() * 255);
+    var b = parseInt(Math.random() * 255);
+    var a = Math.random().toFixed(2);
+    return [r, g, b, a];
+  }
+
+  // 渲染
+  function drawScene (gl, position) {
+      // 设置清空画布的颜色
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      // 清空画布
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      // 重新赋值数据
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
+      // 绘制图元设置为三角形
+      var primitiveType = gl.TRIANGLE_FAN;
+      // 从顶点数组的开始位置获取顶点数据
+      var offset = 0;
+      // 绘制的点数
+      var count = position.length / 2;
+      // 渲染数据
+      gl.drawArrays(primitiveType, offset, count);
+
+  }
+
+  // 值变化时触发
+  function changeValue () {
+    let x = moveX.value;
+    let y = moveY.value;
+    let scalex =  scaleX.value;
+    let scaley =  scaleY.value;
+    let deg = rotate.value;
+    let xDeg = Math.sin(Math.PI / 180 * deg);
+    let yDeg = Math.cos(Math.PI / 180 * deg);
+    gl.vertexAttrib2f(a_Move, x, y);
+    gl.vertexAttrib2f(a_Rotate, xDeg, yDeg);
+    gl.vertexAttrib2f(a_Scale, scalex, scaley);
+    drawScene(gl, position);
+  } 
+  var canvas = document.querySelector('canvas');
+  var moveX = document.querySelector('#moveX');
+  var moveY = document.querySelector('#moveY');
+  var scaleX = document.querySelector('#scaleX');
+  var scaleY = document.querySelector('#scaleY');
+  var rotate = document.querySelector('#rotate');
+  moveX.oninput = changeValue;
+  moveY.oninput = changeValue;
+  scaleX.oninput = changeValue;
+  scaleY.oninput = changeValue;
+  rotate.oninput = changeValue;
+  
+  var gl = canvas.getContext('webgl');
+  // 获取顶点着色器源码
+  var vertextShaderSource = document.querySelector('#vertex_shader_source').text;
+  // 获取片元着色器源码
+  var fragmentShaderSource = document.querySelector('#fragment_shader_source').text;
+
+  // 生成顶点着色器对象
+  var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertextShaderSource);
+  // 生成片元着色器对象
+  var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+  // 生成着色器程序
+  var program = createProgram(gl, vertexShader, fragmentShader);
+
+  // 使用着色器程序
+  gl.useProgram(program);
+
+  // 找到顶点着色器中 a_Position 变量的地址
+  var a_Position = gl.getAttribLocation(program, 'a_Position');
+  // 找到顶点着色器中 a_Screen_Size 变量的地址
+  var a_Screen_Size = gl.getAttribLocation(program, 'a_Screen_Size');
+  // 找到顶点着色器中 a_Move 变量的地址
+  var a_Move = gl.getAttribLocation(program, 'a_Move');
+  // 找到顶点着色器中 a_Scale 变量的地址
+  var a_Scale = gl.getAttribLocation(program, 'a_Scale');
+  // 找到顶点着色器中 a_Rotate 变量的地址
+  var a_Rotate = gl.getAttribLocation(program, 'a_Rotate');
+  // 找到顶点着色器中 a_Origin 变量的地址
+  var a_Origin = gl.getAttribLocation(program, 'a_Origin');
+  // 找到片元着色器中 u_Color 变量的地址;
+  var u_Color = gl.getUniformLocation(program, 'u_Color');
+
+  // 设置屏幕宽高信息
+  gl.vertexAttrib2f(a_Screen_Size, gl.canvas.width, gl.canvas.height);
+  // 设置移动
+  gl.vertexAttrib2f(a_Move, moveX.value, moveY.value);
+  // 设置缩放
+  gl.vertexAttrib2f(a_Scale, scaleX.value, scaleX.value);
+  // 设置旋转
+  gl.vertexAttrib2f(a_Rotate, 0, 1);
+  // 设置圆心
+  gl.vertexAttrib2f(a_Origin, -25, -25);
+  // 生成随机颜色
+  var color = randomColor();
+  // 给片元着色器的 u_Color 设置颜色
+  gl.uniform4f(u_Color, color[0], color[1], color[2], color[3]);
+
+  // 创建缓冲区
+  var buffer = gl.createBuffer();
+  // 半径
+  let r = 25;
+  // 弧线数量
+  let n = 5;
+  // 坐标数据
+  var position = [r, r]; // 圆心
+  // 生成弧线
+  for (let i = 0; i <= n; i++) {
+      position.push(Math.sin(Math.PI * 2 / n * i) * r + r,  Math.cos(Math.PI * 2 / n * i) * r + r);
+  }
+
+  // 绑定缓冲区
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  // 将数据写入缓冲区
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
+  // 启用对应属性
+  gl.enableVertexAttribArray(a_Position);
+
+  // 每次迭代运行提取两个单位数据
+  var size = 2;
+  // 每个单位的数据类型是32位浮点型
+  var type = gl.FLOAT;
+  // 不需要归一化数据
+  var normalize = false;
+  // 0 = 移动单位数量 * 每个单位占用内存（sizeof(type)）
+  // 每次迭代运行运动多少内存到下一个数据开始点
+  var stride = 0;
+  // 从缓冲起始位置开始读取
+  var offset = 0;
+  // 告诉属性怎么从positionBuffer中读取数据 (ARRAY_BUFFER)
+  gl.vertexAttribPointer(a_Position, size, type, normalize, stride, offset);
+
+  // 设置清空画布的颜色
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  // 清空画布
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  drawScene(gl, position);
+</script>
+
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>html转Svg图片</title>
+  <link rel="stylesheet" href="./indexl.css">
+</head>
+<body>
+  <input id="dirFile" type="file" name="file" webkitdirectory directory>
+  <div id="dirImgBox">
+    <div id="addFile" onclick="dirFile.click()">
+      <i>+</i>
+    </div>
+  </div>
+  <script src="index.js"></script>
+  <script>
+    let dirFile = document.getElementById('dirFile');
+    let dirImgBox = document.getElementById('dirImgBox');
+    let imagesArr = [];
+    let imagesIndex = 0;
+    let fn = null;
+    dirFile.onchange = function (e) { // 加載文件夾文件
+      let files = Array.from(dirFile.files); // 格式化files偽數組為數組
+      addFile.style.display = 'none';
+      files.forEach(function (files, index) {
+        if (['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'].indexOf(files.type) === -1) { // 過濾非圖片
+          return
+        };
+        let url = window.URL.createObjectURL(files);
+        imagesArr.push(url)
+      });
+      fn = new CrtImgLi({
+        el: dirImgBox,
+        images: imagesArr
+      }); // 創建實例
+      // fn.download(); // 下載圖片
+    }
+    window.onresize = function () {
+      fn && fn.reload(); // 重新繪製
+    }
+  </script>
+</body>
+</html>

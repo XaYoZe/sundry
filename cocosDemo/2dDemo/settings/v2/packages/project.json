@@ -1,0 +1,23 @@
+{
+  "__version__": "1.0.1",
+  "physics": {
+    "collisionGroups": [
+      {
+        "index": 1,
+        "name": "food"
+      },
+      {
+        "index": 2,
+        "name": "snack"
+      }
+    ],
+    "collisionMatrix": {
+      "0": 1,
+      "1": 6,
+      "2": 6
+    }
+  },
+  "general": {
+    "renderPipeline": "fd8ec536-a354-4a17-9c74-4f3883c378c8"
+  }
+}

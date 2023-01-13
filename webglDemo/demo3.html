@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>点击画布绘制点</title>
+</head>
+
+<body>
+  <canvas id="cav" width="500" height="500"></canvas>
+</body>
+<script src="./common.js"></script>
+<script type="notjs" id="vertex_shader_source">
+  // 设置浮点数精度为中等精度
+  precision mediump float;
+  // 接收点在 canvas 坐标系上的坐标(x, y)
+  attribute vec2 a_Position;
+  // 接收 canvas 的宽高尺寸
+  attribute vec2 a_Screen_Size;
+  void main () {
+    // 从像素坐标转换到 0.0 到 1.0,再把 0->1 转换 0->2, 把 0->2 转换到 -1->+1 (裁剪空间)
+    vec2 position = (a_Position / a_Screen_Size) * 2.0 - 1.0;
+    // canvas Y轴从上到下, gl从下到上, 取反
+    position = position * vec2(1.0, -1.0);
+    gl_Position = vec4(position, 0, 1);
+    // 点大小
+    // gl_PointSize = 10.0;
+  }
+</script>
+<script type="notjs" id="fragment_shader_source">
+  // 设置浮点数精度为中等精度
+  precision mediump float;
+  // 接收 javaScript 传过来的颜色值 rbga;
+  uniform vec4 u_Color;
+  void main () {
+    // 颜色转为[0, 1]的区间的值
+    vec4 color = u_Color / vec4(225, 225, 225, 1);
+    // 设置填充颜色
+    gl_FragColor = color;
+  }
+</script>
+<script>
+
+  // 生成随机颜色
+  function randomColor() {
+    var r = parseInt(Math.random() * 255);
+    var g = parseInt(Math.random() * 255);
+    var b = parseInt(Math.random() * 255);
+    var a = Math.random().toFixed(2);
+    return [r, g, b, a];
+  }
+
+
+  var canvas = document.querySelector('canvas');
+  var gl = canvas.getContext('webgl');
+  // 获取顶点着色器源码
+  var vertextShaderSource = document.querySelector('#vertex_shader_source').text;
+  // 获取片元着色器源码
+  var fragmentShaderSource = document.querySelector('#fragment_shader_source').text;
+
+  // 生成顶点着色器对象
+  var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertextShaderSource);
+  // 生成片元着色器对象
+  var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+  // 生成着色器程序
+  var program = createProgram(gl, vertexShader, fragmentShader);
+
+  // 使用着色器程序
+  gl.useProgram(program);
+
+  // 找到顶点着色器中 a_Position 变量的地址
+  var a_Position = gl.getAttribLocation(program, 'a_Position');
+  // 找到顶点着色器中 a_Screen_Size 变量的地址
+  var a_Screen_Size = gl.getAttribLocation(program, 'a_Screen_Size');
+  // 找到片元着色器中 u_Color 变量的地址;
+  var u_Color = gl.getUniformLocation(program, 'u_Color');
+
+  // 给顶点着色器中的 a_Screen_Size 设置屏幕宽高信息
+  gl.vertexAttrib2f(a_Screen_Size, gl.canvas.width, gl.canvas.height);
+
+  // 生成随机颜色
+  var color = randomColor();
+  // 给片元着色器的 u_Color 设置颜色
+  gl.uniform4f(u_Color, color[0], color[1], color[2], color[3]);
+
+  // 设置清空画布的颜色
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  // 清空画布
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  // 创建缓冲区
+  var buffer = gl.createBuffer();
+  // 坐标数据
+  var position = [
+    250, 0,
+    250, 250,
+    0, 250,
+    250, 250,
+    500, 250,
+    250, 500,
+    0, 250,
+    0, 500,
+    250, 500,
+    250, 0,
+    500, 0,
+    500, 250
+  ];
+  // 绑定缓冲区
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  // 将数据写入缓冲区
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
+  // 启用对应属性
+  gl.enableVertexAttribArray(a_Position);
+
+  // 每次迭代运行提取两个单位数据
+  var size = 2;
+  // 每个单位的数据类型是32位浮点型
+  var type = gl.FLOAT;
+  // 不需要归一化数据
+  var normalize = false;
+  // 0 = 移动单位数量 * 每个单位占用内存（sizeof(type)）
+  // 每次迭代运行运动多少内存到下一个数据开始点
+  var stride = 0;
+  // 从缓冲起始位置开始读取
+  var offset = 0;
+  // 告诉属性怎么从positionBuffer中读取数据 (ARRAY_BUFFER)
+  gl.vertexAttribPointer(a_Position, size, type, normalize, stride, offset);
+
+  // 绘制图元设置为三角形
+  var primitiveType = gl.TRIANGLES;
+  // 从顶点数组的开始位置获取顶点数据
+  var offset = 0;
+  // 绘制的点数
+  var count = position.length;
+  // 渲染数据
+  gl.drawArrays(primitiveType, offset, count);
+</script>
+
+</html>

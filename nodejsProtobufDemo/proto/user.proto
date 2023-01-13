@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package ns;
+
+// 请求数据包封装
+message RPCInput {
+  string obj = 1;
+  string func = 2;         //  具体函数方法
+  bytes  req      = 3;         //  请求数据包
+  map<string,string> opt = 4;  //  各種配置
+}
+
+// 返回数据包封装
+message RPCOutput {
+  int32 ret  = 1;              // 返回值 
+  bytes res  = 2;              // 返回数据包
+  map<string,string> opt = 3;  // 上下文
+  string desc = 4;             // 错误信息
+  string obj = 5;              // 调用服务
+  string func = 6;             // 调用函数方法
+}
+
+message LoginReq {
+  required string username = 1;
+  required string password = 2;
+}
+message LoginRes {
+  int32 id = 1;
+  string name = 2;
+  string token = 3;
+  option allow_alias = true;
+}
+
+service UserExtObj {
+  rpc Login (LoginReq) returns (LoginRes);
+}

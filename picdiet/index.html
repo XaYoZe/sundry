@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Picdiet - 极速的在线图片压缩80%图片体积</title>
+  <meta name="keywords" content="图片压缩，jpg压缩, 在线图片压缩，减少图片体积，HTML5, 免费">
+  <meta name="description" content="Picdiet是一款用JavaScript编写而成的图片压缩神器，所有压缩过程都在浏览器中进行，完全免费">
+  <link rel="shortcut icon" href="./img/favicon.ico">
+  <link rel="stylesheet" href="./css/global.css">
+</head>
+<body>
+  <header>
+    <a id="logo" href="javascript:">
+      <object data="./img/logo.svg" width="300" height="100" type="image/svg+xml"></object>
+    </a>
+    <h1>独特且强悍的JavaScript算法，能极速压缩80%的图片大小，而不损害其质量 </h1>
+    <p class="gp">
+      Picdiet是一款在线批量压缩图片神器，它不需要后端服务器或者API的支持，仅通过你的浏览器来压缩图片大小，这意味着它压缩图片极快并且不会导致隐私或敏感图片泄漏。同时我们大量的测试结果也证明其压缩表现要远好于常规的压缩软件如：jpegoptim，jpegtran，jpegrescan和jpegmini
+    </p>
+  </header>
+  <main>
+    <div id="upload" align="center">
+      <ul class="upload_intro">
+        <li>支持的图片格式:jpg，jpeg</li>
+        <li class="rd">无图像尺寸限制</li>
+        <li class="rd">无图像数量限制</li>
+        <li>无文件大小限制</li>
+      </ul>
+      <div id="btn_outer">
+        <div class="q_outer">
+          <span class="q_title">输出图像质量:</span>
+          <span id="quality">75%</span>
+          <input type="range" max="99" min="1" value="75" id="q_value">
+        </div>
+        <span role="button" id="upload_btn">
+          <span id="single_spinner">
+            <span id="spinner"></span>
+            <span id="pgs_percent"></span>
+          </span>
+          <span id="up_txt">选择你的图片</span>
+          <input type="file" id="input" multiple accept=".jpg, .jpeg">
+        </span>
+      </div>
+      <span id="dld">下载文件</span>
+      <ul class="compress_info" id="compress_info">
+        <li>压缩耗时:<span id="duration"></span></li>
+        <li>原始文件大小: <span id="pre_filesize"></span> </li>
+        <li>压缩后文件大小: <span id="aft_filesize"></span> </li>
+        <li>压缩百分比:<span id="reduction_percent"></span></li>
+      </ul>
+    </div>
+    </div>
+    <div id="compare">
+      <div class="compare_wrapper">
+        <div id="separator"><span class="left-arr"></span><span class="right-arr"></span></div>
+        <div class="img_original" id="img_original">
+          <span class="compare_title_right" id="o_title">原始: 961KB</span>
+          <img src="./img/photographer.jpg" alt="woman taking a photo" id="before">
+        </div>
+        <div class="img_compressed" id="img_compressed">
+          <span class="compare_title" id="p_title">Picdiet: 147KB</span>
+          <img src="./img/photographer_compressed.jpg" alt="woman taking a photo" id="after">
+        </div>
+      </div>
+    </div>
+    <div id="result">
+      <div class="left">
+        <div class="bar">
+          <span class="bar_blue" id="bar_blue"></span>
+          <span class="bar_txt">Picdiet: <span id="bar_after">147KB</span> (<span id="bar_reduction">85%</span>
+            减小体积)</span>
+        </div>
+        <div class="bar">
+          <span class="bar_pink"></span>
+          <span class="bar_txt">原始: <span id="bar_pre">961KB</span> </span>
+        </div>
+      </div>
+      <div class="dld_btn" id="dld_original">
+        <a href="./img/photographer.jpg" download="original_image">原始图像</a>
+        <a href="./img/photographer_compressed.jpg" download="compressed_image">压缩图像</a>
+      </div>
+    </div>
+    <span class="clear"></span>
+  </main>
+  <footer>
+    <div id="lang">
+      <ul>
+        <li><a href="javascript:">English</a></li>
+        <li><a href="javascript:">Español</a></li>
+        <li><a href="javascript:">Português</a></li>
+        <li><a href="javascript:">简体中文</a></li>
+        <li><a href="javascript:">繁體中文</a></li>
+        <li><a href="javascript:">日本語</a></li>
+        <li><a href="javascript:">Deutsch</a></li>
+        <li><a href="javascript:">ελληνικά</a></li>
+        <li><a href="javascript:">Italiano</a></li>
+        <li><a href="javascript:">čeština</a></li>
+        <li><a href="javascript:">dansk</a></li>
+        <li><a href="javascript:">한국어</a></li>
+        <li><a href="javascript:">Nederlands</a></li>
+        <li><a href="javascript:">Język Polski</a></li>
+        <li><a href="javascript:">suomen kieli</a></li>
+        <li><a href="javascript:">français</a></li>
+        <li><a href="javascript:">magyar</a></li>
+        <li><a href="javascript:">Română</a></li>
+        <li><a href="javascript:">Русский</a></li>
+        <li><a href="javascript:">Svenska</a></li>
+        <li><a href="javascript:">Bahasa Indonesia</a></li>
+        <li><a href="javascript:">Türkçe</a></li>
+        <li><a href="javascript:">Tiếng Việt</a></li>
+        <li><a href="javascript:">Norsk</a></li>
+        <li><a href="javascript:">ไทย</a></li>
+        <li><a href="javascript:">Slovenský Jazyk</a></li>
+      </ul>
+    </div>
+    <input id="recompress" type="hidden" value="继续压缩图像">
+    <script src="https://cdn.bootcdn.net/ajax/libs/FileSaver.js/2.0.5/FileSaver.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jszip/3.5.0/jszip.js"></script>
+    <script src="./js/cjpeg.js"></script>
+    <script src="./js/index.js"></script>
+  </footer>
+</body>
+</html>

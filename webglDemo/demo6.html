@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>绘制图片</title>
+  <style>
+  </style>
+</head>
+
+<body>
+  <canvas id="cav"></canvas>
+  <img id="img" width="500" src="./1.jpg">
+</body>
+<script src="./common.js"></script>
+<script type="notjs" id="vertex_shader_source">
+  // 设置浮点数精度为中等精度
+  precision mediump float;
+  // 接收点在 canvas 坐标系上的坐标(x, y)
+  attribute vec2 a_texCood;
+
+  attribute vec2 a_position;
+  // 接收 canvas 的宽高尺寸
+  attribute vec2 a_screen_size;
+
+  varying vec2 v_texCood;
+  
+  void main () {
+    // 屏幕坐标转为裁剪坐标
+    vec2 position = (a_position / a_screen_size) * 2.0 - 1.0;
+    // canvas Y轴从上到下, gl从下到上, 取反
+    position = position * vec2(1.0, -1.0);
+    gl_Position = vec4(position, 0, 1);
+    v_texCood = a_texCood;
+    // 点大小
+    // gl_PointSize = 10.0;
+  }
+</script>
+<script type="notjs" id="fragment_shader_source">
+  // 设置浮点数精度为中等精度
+  precision mediump float;
+  // 纹理
+  uniform sampler2D u_image;
+  // 从顶点着色器传入的纹理坐标
+  varying vec2 v_texCood;
+  void main () {
+    // 在纹理上寻找对应颜色值
+    gl_FragColor = texture2D(u_image, v_texCood);
+  }
+</script>
+<script>
+
+  function drawScene (gl) {
+      // 设置清空画布的颜色
+      gl.clearColor(0.0, 0.0, 0.0, 0.0);
+      // 清空画布
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      // 重新赋值数据
+      // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
+      // 绘制图元设置为三角形
+      var primitiveType = gl.TRIANGLE_FAN;
+      // 从顶点数组的开始位置获取顶点数据
+      var offset = 0;
+      // 绘制的点数
+      var count = 4;
+      // 渲染数据
+      gl.drawArrays(primitiveType, offset, count);
+  }
+
+  var image = document.querySelector('img');
+  var canvas = document.querySelector('canvas');
+  var gl = canvas.getContext('webgl');
+  canvas.width = image.width;
+  canvas.height = image.height;
+  // 设置视口
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  // 获取顶点着色器源码
+  var vertextShaderSource = document.querySelector('#vertex_shader_source').text;
+  // 获取片元着色器源码
+  var fragmentShaderSource = document.querySelector('#fragment_shader_source').text;
+  // 生成顶点着色器对象
+  var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertextShaderSource);
+  // 生成片元着色器对象
+  var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+  // 生成着色器程序
+  var program = createProgram(gl, vertexShader, fragmentShader);
+  // 使用着色器程序
+  gl.useProgram(program);
+
+  
+  // 找到顶点着色器中 a_texCood 变量的地址
+  var a_position = gl.getAttribLocation(program, 'a_position');
+  // 找到顶点着色器中 a_texCood 变量的地址
+  var a_texCood = gl.getAttribLocation(program, 'a_texCood'); 
+  // 找到顶点着色器中 a_screen_size 变量的地址
+  var a_screen_size = gl.getAttribLocation(program, 'a_screen_size');
+  // 找到片元着色器中 u_Color 变量的地址;
+  // var u_Color = gl.getUniformLocation(program, 'u_Color');
+
+  // 给顶点着色器中的 a_screen_size 设置屏幕宽高信息
+  gl.vertexAttrib2f(a_screen_size, gl.canvas.width, gl.canvas.height);
+
+  // 创建缓冲区
+  var positionBuffer = gl.createBuffer();
+  // 绑定缓冲区
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  // 将数据写入缓冲区
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      0, canvas.height,
+      0, 0,
+      canvas.width, 0,
+      canvas.width, canvas.height,
+  ]), gl.STATIC_DRAW);
+  // 启用对应属性
+  gl.enableVertexAttribArray(a_position);
+  // 告诉属性怎么从positionBuffer中读取数据 (ARRAY_BUFFER)
+  gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
+
+
+  // // 启用对应属性
+  gl.enableVertexAttribArray(a_position);
+  // 每次迭代运行提取两个单位数据
+  var size = 2;
+  // 每个单位的数据类型是32位浮点型
+  var type = gl.FLOAT;
+  // 不需要归一化数据
+  var normalize = false;
+  // 0 = 移动单位数量 * 每个单位占用内存（sizeof(type)）
+  // 每次迭代运行运动多少内存到下一个数据开始点
+  var stride = 0;
+  // 从缓冲起始位置开始读取
+  var offset = 0;
+  // 告诉属性怎么从positionBuffer中读取数据 (ARRAY_BUFFER)
+  gl.vertexAttribPointer(a_position, size, type, normalize, stride, offset);
+
+  this.drawScene(gl);
+
+  // 创建缓冲区
+  var texcoordBuffer = gl.createBuffer();
+  // 绑定缓冲区
+  gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+  // 将数据写入缓冲区, 纹理坐标系从左下角开始算
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    0.0, 0.0,
+    0.0, 1.0,
+    1.0, 1.0,
+    1.0, 0.0, 
+  ]), gl.STATIC_DRAW);
+  // 启用对应属性
+  gl.enableVertexAttribArray(a_texCood);
+  // 告诉属性怎么从positionBuffer中读取数据 (ARRAY_BUFFER)
+  gl.vertexAttribPointer(a_texCood, 2, gl.FLOAT, false, 0, 0);
+  
+
+  // 创建纹理对象
+  var texture = gl.createTexture();
+  // 翻转图片
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  // 有透明通道需要设置,否则有蒙层
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  // 绑定纹理
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  // 设置纹理参数
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  // 指定二维纹理图像
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+  this.drawScene(gl);
+  
+</script>
+
+</html>

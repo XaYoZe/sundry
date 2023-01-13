@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<script src="../node_modules/protobufjs/dist/protobuf.js"></script>
+<script>
+  // 封裝ajax
+  function ajax (options) { // ajax方法
+    return new Promise(function (resolve, reject) {
+      let url = options.url || 'http://localhost:80/';
+      let type = options.type || 'get';
+      let data = options.data || null;
+      let xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function (err) {
+        reject({status: xhr.status, des: xhr.response})
+      }
+      xhr.open(type, url);
+      options.headers && Object.keys(options.headers).forEach(key => {
+        xhr.setRequestHeader(key, options.headers[key]);
+      })
+      options.responseType && (xhr.responseType = options.responseType)
+      xhr.send(data);
+    })
+  }
+</script>
+<script>
+  let Root = protobuf.Root;
+  let root = null;
+  ajax({
+    url: '../proto/index.json',
+    headers: {'Content-Type': 'application/json;charset=utf-8'}
+  }).then(json => {
+    root = Root.fromJSON(JSON.parse(json));
+  })
+  // 編譯數據
+  function enCodeData(desction, data) {
+    const dataDesction = root.lookupType(desction); // 通過空間命名獲取消息
+    const err = dataDesction.verify(data); // 校驗字段類型
+    if (err) throw err;
+    const message = dataDesction.create(data); // 創建消息
+    const buffer = dataDesction.encode(message).finish(); // 編譯
+    return buffer;
+  }
+  // 解析數據
+  function deCodeData(desction, data) {
+    const dataDesction = root.lookupType(desction);  // 通過空間命名獲取消息
+    const result = dataDesction.decode(data); // 解析
+    const obj = dataDesction.toObject(result)
+    return obj;
+  }
+</script>
+<body>
+  <label>用戶名: <input id="username" type="text"></label>
+  <label>密碼: <input id="password" type="text"></label>
+  <button id="btn">登錄</button>
+</body>
+<script>
+  let btn = document.getElementById('btn');
+  let username = document.getElementById('username');
+  let password = document.getElementById('password');
+  btn.onclick = function () {
+    let data = enCodeData('LoginReq', {username: username.value, password: password.value});
+    let queryData = enCodeData('RPCInput', {
+      obj: 'UserExtObj',
+      func: 'Login',
+      req: data,
+      opt: {
+        'a' : 'b'
+      }
+    })
+    ajax({
+      type: 'post', 
+      url: 'http://localhost:80/api',
+      data: queryData, 
+      headers: {
+        'Content-Type': 'application/protobuf'
+      },
+      responseType: "arraybuffer"
+    }).then(res => {
+      let data = deCodeData('RPCOutput', new Uint8Array(res));
+      console.log('post', deCodeData('LoginRes', new Uint8Array(data.res)) );
+    })
+  }
+</script>
+</html>

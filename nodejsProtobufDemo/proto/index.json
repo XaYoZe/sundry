@@ -1,0 +1,99 @@
+{
+  "nested": {
+    "ns": {
+      "nested": {
+        "RPCInput": {
+          "fields": {
+            "obj": {
+              "type": "string",
+              "id": 1
+            },
+            "func": {
+              "type": "string",
+              "id": 2
+            },
+            "req": {
+              "type": "bytes",
+              "id": 3
+            },
+            "opt": {
+              "keyType": "string",
+              "type": "string",
+              "id": 4
+            }
+          }
+        },
+        "RPCOutput": {
+          "fields": {
+            "ret": {
+              "type": "int32",
+              "id": 1
+            },
+            "res": {
+              "type": "bytes",
+              "id": 2
+            },
+            "opt": {
+              "keyType": "string",
+              "type": "string",
+              "id": 3
+            },
+            "desc": {
+              "type": "string",
+              "id": 4
+            },
+            "obj": {
+              "type": "string",
+              "id": 5
+            },
+            "func": {
+              "type": "string",
+              "id": 6
+            }
+          }
+        },
+        "LoginReq": {
+          "fields": {
+            "username": {
+              "rule": "required",
+              "type": "string",
+              "id": 1
+            },
+            "password": {
+              "rule": "required",
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "LoginRes": {
+          "options": {
+            "allow_alias": true
+          },
+          "fields": {
+            "id": {
+              "type": "int32",
+              "id": 1
+            },
+            "name": {
+              "type": "string",
+              "id": 2
+            },
+            "token": {
+              "type": "string",
+              "id": 3
+            }
+          }
+        },
+        "UserExtObj": {
+          "methods": {
+            "Login": {
+              "requestType": "LoginReq",
+              "responseType": "LoginRes"
+            }
+          }
+        }
+      }
+    }
+  }
+}

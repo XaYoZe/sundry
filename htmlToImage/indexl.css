@@ -1,0 +1,47 @@
+input[type=file] {
+  display: none;
+}
+html, body, #dirImgBox {
+  padding: 0;
+  margin: 0;
+}
+
+#dirImgBox {
+  position: relative;
+  padding: 10px;
+}
+
+#dirImgBox div:not(#addFile) {
+  padding: 5px;
+  /* margin: 5px; */
+  border: 1px dashed #f1c000;
+  text-align: center;
+  transition: all 1s;
+  position: absolute;
+  height: max-content;
+}
+#dirImgBox div img {
+  width: 100%;
+  display: block;
+}
+
+#dirImgBox #addFile {
+  width: 100px;
+  height: 150px;
+  padding: 5px;
+  border: 1px dashed #f1c000;
+  color: #b7b7b7;
+  text-align: center;
+}
+
+#dirImgBox #addFile i {
+  display: inline-block;
+  font-size: 70px;
+  line-height: 150px;
+  margin: 0 auto;
+  font-style: normal;
+}
+
+#dirImgBox #addFile.hasImg i {
+  display: none;
+}
