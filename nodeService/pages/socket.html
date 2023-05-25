@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <p>
+    <button onclick="linkNetSocket(1)">連接net socket</button>
+    <button onclick="linkNetSocket(0)">斷開net socket</button>
+    <button onclick="linkNetSocket(2)">發送net socket</button>
+  </p>
+  <p>
+    <button onclick="linkHttpSocket(1)">連接http socket</button>
+    <button onclick="linkHttpSocket(0)">斷開net socket</button>
+    <button onclick="linkHttpSocket(2)">發送net socket</button>
+  </p>
+</body>
+<script>
+  let httpSocket = null;
+  let netSocket = null;
+  function linkHttpSocket(type) {
+    switch (type) {
+      case 1:
+        httpSocket = new WebSocket('ws://127.0.0.1:8090');
+        httpSocket.onopen = function () {
+          console.log('連接http socket成功');
+        }
+        httpSocket.onmessage = function (e) {
+          console.log('接受http socket數據', e)
+        }
+        break;
+      case 2:
+        httpSocket.send('' + Date.now())
+        break
+      default:
+        httpSocket.close();
+        httpSocket = null;
+        break;
+    }
+  }
+  function linkNetSocket(type) {
+    switch (type) {
+      case 1:
+        netSocket = new WebSocket('ws://127.0.0.1:8090');
+        netSocket.onopen = function () {
+          console.log('連接net socket成功');
+        }
+        netSocket.onmessage = function (e) {
+          console.log('接受net socket數據', e)
+        }
+        break;
+      case 2:
+        netSocket.send('' + Date.now())
+        break
+      default:
+        netSocket.close();
+        netSocket = null;
+        break;
+    }
+  }
+</script>
+
+</html>
