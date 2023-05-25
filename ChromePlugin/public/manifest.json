@@ -1,0 +1,19 @@
+{
+  "name": "MIYA",
+  "description": "miya測試環境添加key",
+  "version": "1.0",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["contextMenus", "tabs", "storage", "activeTab"],
+  "action": {
+    "default_popup": "index.html#/index",
+    "default_icon": "icon/icon.png"
+  },
+  "icons": {
+    "16": "icon/globalGoogle16.png",
+    "48": "icon/globalGoogle48.png",
+    "128": "icon/globalGoogle128.png"
+  }
+}
