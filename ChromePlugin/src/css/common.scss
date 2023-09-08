@@ -5,8 +5,8 @@ html, body, #app {
   width: 100%;
 }
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 3px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -19,4 +19,10 @@ html, body, #app {
   -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
   border-radius: 5px;
   background-color: #d3dce6;
+}
+
+img.icon {
+  width: 10px;
+  height: 10px;
+  user-select: none;
 }

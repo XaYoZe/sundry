@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <style>
+    .popup {
+      width: 350px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .popup .popup_content {
+      padding-top: 16px;
+    }
+
+    .popup .popup_content h1 {
+      margin-top: 0;
+    }
+
+    .popup .popup_content p {
+      position: relative;
+      width: max-content;
+      margin: 16px auto;
+    }
+
+    .popup .popup_content label {
+      display: inline-block;
+      vertical-align: middle;
+      width: 80px;
+      text-align: right;
+      margin-right: 20px;
+      position: absolute;
+      right: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .popup .popup_content input {
+      height: 20px;
+      width: 200px;
+    }
+
+    .popup .popup_content button {
+      width: 100px;
+    }
+
+    .error_tip {
+      margin-top: 10px;
+      color: red;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="popup">
+    <div class="popup_content">
+      <h1>key生成參數</h1>
+      <p><label for="id">用戶id: </label><input type="text" id="id" /></p>
+      <p><label for="name">用戶名: </label><input type="text" id="name" /></p>
+      <button onclick="clickConfirm()">確定</button>
+      <div class="error_tip" id="errorTip">生成失敗, 檢查id是否正確或者接口是否正常 </div>
+    </div>
+  </div>
+  <script src="./popup.js">
+  </script>
+</body>
+
+</html>

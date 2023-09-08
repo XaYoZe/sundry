@@ -2,7 +2,7 @@
   <div class="home">
     <nav class="navbar navbar-dark bg-dark">
       <div class="container-fluid">
-        <a class="navbar-brand" href="#">Offcanvas dark navbar</a>
+        <a class="navbar-brand" href="#">{{ curPage.text }}</a>
         <button
           class="navbar-toggler"
           type="button"
@@ -18,19 +18,24 @@
           id="offcanvasDarkNavbar"
           aria-labelledby="offcanvasDarkNavbarLabel"
         >
-          <div class="offcanvas-header">
+          <div class="offcanvas-header position-relative py-1" style="height: 56px">
             <a
               href="/"
-              class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none"
+              class="d-flex align-items-center mb-md-0 me-md-auto text-white text-decoration-none"
+              style="height: 40px;line-height: 40px;"
             >
               <span class="fs-4">Sidebar</span>
             </a>
-            <hr />
             <button
               type="button"
-              class="btn-close btn-close-white"
+              class="btn-close btn-close-white py-1 px-2 position-absolute"
               data-bs-dismiss="offcanvas"
               aria-label="Close"
+              style="width: 1.5em;
+              font-size: 1.24rem;
+              height: 1.5em;
+              top: 16px;
+              right: 23px;"
             ></button>
           </div>
           <div class="offcanvas-body">
@@ -77,6 +82,7 @@ import { ref, defineAsyncComponent, computed, onBeforeMount } from "vue";
 let navbar = ref([
   { text: "首頁", component: defineAsyncComponent(() => import('@cpt/home/CurAct.vue')) },
   { text: "記錄", component: defineAsyncComponent(() => import('@cpt/home/History.vue')) },
+  { text: "設置", component: defineAsyncComponent(() => import('@cpt/home/Setting.vue')) },
 ]);
 let active = ref(0);
 let curPage = computed(() => {
@@ -98,7 +104,7 @@ onBeforeMount(async () => {
   .continue {
     height: calc(100% - 56px);
     width: 100%;
-
+    overflow: auto;
   }
 }
 </style>

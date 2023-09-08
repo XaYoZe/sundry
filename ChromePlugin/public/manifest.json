@@ -6,7 +6,13 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["contextMenus", "tabs", "storage", "activeTab"],
+  "permissions": ["scripting", "contextMenus", "tabs", "storage", "activeTab", "declarativeContent"],
+  "host_permissions": [
+    "http://*/",
+    "http://*/*",
+    "https://*/",
+    "https://*/*"
+  ],
   "action": {
     "default_popup": "index.html#/index",
     "default_icon": "icon/icon.png"

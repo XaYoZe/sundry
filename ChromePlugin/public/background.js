@@ -1,231 +1,256 @@
-const config = {
-  keyApiUrl: {
+class Background {
+  popup = {
+    width: 500,
+    height: 250,
+  };
+  server = {
     beta: "",
     staging: "",
-  },
-  whiteList: [
-    /http\:\/\/localhost/,
-    /http\:\/\/127.0.0.1/,
-  ]
-};
-let popup = {
-  width: 500,
-  height: 250,    
-};
-
-function testWhiteList (url) {
-  return config.whiteList.some(item => {
-    return item.test(url)
-  })
-}
-
-// 獲取url參數
-function getUrlParam(url, searchKey) {
-  let urlObj = new URL(url);
-  let searchParam = urlObj.searchParams;
-  if (searchKey) {
-    return searchParam.get(searchKey);
-  }
-  let arr = [];
-  searchParam.forEach((value, key) => {
-    arr.push({ key, value });
-  });
-  return arr;
-}
-
-// 設置url參數
-function setUrlParam(url, key, val) {
-  let urlObj = new URL(url);
-  let searchParam = urlObj.searchParams;
-  searchParam.set(key, val);
-  return urlObj.toString();
-}
-
-// 隨機生成名字
-function random(prefix, randomLength) {
-  // 兼容更低版本的默认值写法
-  prefix === undefined ? (prefix = "") : prefix;
-  randomLength === undefined ? (randomLength = 8) : randomLength;
-
-  // 设置随机用户名
-  // 用户名随机词典数组
-  let nameArr = [
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 0],
-    [
-      "a",
-      "b",
-      "c",
-      "d",
-      "e",
-      "f",
-      "g",
-      "h",
-      "i",
-      "g",
-      "k",
-      "l",
-      "m",
-      "n",
-      "o",
-      "p",
-      "q",
-      "r",
-      "s",
-      "t",
-      "u",
-      "v",
-      "w",
-      "x",
-      "y",
-      "z",
-    ],
+  };
+  whiteList = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "",
+    "",
   ];
-  // 随机名字字符串
-  let name = prefix;
-  // 循环遍历从用户词典中随机抽出一个
-  for (var i = 0; i < randomLength; i++) {
-    // 随机生成index
-    let index = Math.floor(Math.random() * 2);
-    let zm = nameArr[index][Math.floor(Math.random() * nameArr[index].length)];
-    // 如果随机出的是英文字母
-    if (index === 1) {
-      // 则百分之50的概率变为大写
-      if (Math.floor(Math.random() * 2) === 1) {
-        zm = zm.toUpperCase();
-      }
+  whiteListReg = [];
+  // 后台地址
+  servicesApi = {
+    GetActivity: "/services/activity/ActivityExtObj/GetActivity",
+    newLogin: "/services/auth/newDev/newLogin",
+  };
+  // storage数据
+  storage = new Proxy(
+    {
+      set(data) {
+        return chrome.storage.local.set(data);
+      },
+    },
+    {
+      get(t, key, r) {
+        console.log('get', t[key], t, key, r)
+        return  t[key] || chrome.storage.local.get(key).then((store) => store[key]);
+      },
+      set(t, p, v, r) {
+        console.log('set', t, p, v, r)
+        return chrome.storage.local.set({ [p]: v });
+      },
     }
-    // 拼接进名字变量中
-    name += zm;
+  );
+  constructor() {
+    // // 注册监听storage修改
+    chrome.storage.onChanged.addListener(this.storageChange.bind(this));
+    // 注册插件安裝成功
+    chrome.runtime.onInstalled.addListener(this.installed.bind(this));
+    // // 注册监听tab更新
+    chrome.tabs.onUpdated.addListener(this.tabUpdate.bind(this));
+    // // 注册监听接受消息
+    chrome.runtime.onMessage.addListener(this.onMessage.bind(this));
+    // // 注册監聽右鍵點擊
+    chrome.contextMenus.onClicked.addListener(this.contextMenusClick.bind(this));
+    // // 注册监听tab切换
+    chrome.tabs.onActivated.addListener(this.tabChange.bind(this));
   }
-  // 将随机生成的名字返回
-  return name;
-}
-
-// 跳轉鏈接
-async function jumpUrl (tabId, url) {
-  let targetTab = await chrome.tabs.get(+tabId);
-  await chrome.tabs.update(targetTab.id, {
-    url: url,
-    active: true,
-  });
-}
-// 獲取key
-async function getKey({ id, name, env, tabId }) {
-  let historyStore = await chrome.storage.local.get("history");
-  let link = `${config.keyApiUrl[env]}?flash=true&`;
-  if (id) {
-    link += `id=${id}`;
-  } else {
-    name = name || random(10);
-    link += `name=${name}`;
+  // 右键菜单点击处理
+  async contextMenusClick(info, tab) {
+    console.log(info, tab)
+    let [env, type] = info.menuItemId.split("_");
+    switch (type) {
+      case "1":
+        this.getKey({ env, tabId: tab.id });
+        break;
+      case "2":
+        let windowItem = await chrome.windows.get(tab.windowId);
+        chrome.windows.create({
+          url: `index.html#/popup?env=${env}&type=${type}&tabId=${tab.id}`,
+          width: this.popup.width,
+          height: this.popup.height,
+          left: Math.ceil(windowItem.left + windowItem.width / 2 - this.popup.width / 2),
+          top: Math.ceil(windowItem.top + windowItem.height / 2 - this.popup.height / 2),
+          type: "popup",
+        });
+        break;
+      default:
+        break;
+    }
+    return true;
   }
-  let key = await fetch(link).then((res) => res.text());
-  console.log(key);
-  let { uid } = JSON.parse(atob(key.split(".")[1]));
-  let history = historyStore.history || [];
-  history.unshift({ env, name, key, uid, create: Date.now() });
-  await chrome.storage.local.set({ history });
-  await jumpUrl(tabId, setUrlParam(targetTab.url, "key", key))
-  return key;
-}
+  // tab切换处理
+  async tabChange(tab) {
+    // console.log(tab)
+  }
+  // tab更新处理
+  async tabUpdate(tabId, changeInfo, tab) {
+    console.log('tab更新处理', tabId, changeInfo, tab)
+    if (tab.status === "complete" && /https?:\/\//.test(tab.url) && tab.id) {
+      chrome.scripting
+        .executeScript({
+          injectImmediately: true,
+          target: { tabId: tab.id },
+          files: ["injectScript.js"],
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }
+  // storage修改处理
+  storageChange({server, whiteList}) {
+    console.log('storage修改处理', server, whiteList)
+    if (server) {
+      console.log("修改服务器", whiteList);
+      this.server = server.newValue;
+    }
+    if (whiteList) {
+      console.log("修改白名單", whiteList);
+      this.whiteList = whiteList.newValue;
+      this.whiteListReg = this.whiteList.map(item => new RegExp(item));
+    }
+  }
+  // 插件安裝成功
+  async installed() {
+    console.log(this, this.storage, this.server)
+    this.storage.server = this.server;
+    this.storage.whiteList = this.whiteList;
+    this.whiteListReg = this.whiteList.map(item => new RegExp(item));
 
-// 插件安裝成功
-chrome.runtime.onInstalled.addListener(async () => {
-  
-});
-// 接受消息
-chrome.runtime.onMessage.addListener(({ type, data }, sender, sendResponse) => {
-  console.log("接受消息", type, data, sender);
-  switch (type) {
-    case "getKey":
-      try {
-        getKey(data)
+    console.log('插件安装成功');
+    this.contextMenus();
+    // chrome.action.setBadgeText({text: 'MIYA'})
+  }
+  // 接受消息处理
+  onMessage({ type, data }, sender, sendResponse) {
+    console.log(this);
+    switch (type) {
+      case "getKey":
+        try {
+          this.getKey(data);
+          sendResponse();
+        } catch (ere) {
+          sendResponse(err);
+          return;
+        }
+        break;
+      case "history":
+        this.storage.history.then(({ history }) => {
+          sendResponse(history);
+        });
+        break;
+      case "get":
+        this.storage[data].then((res) => {
+          sendResponse(res);
+        });
+        break;
+      case "set":
+        console.log(this.storage.set);
+        this.storage.set(data).then(() => {
+          sendResponse(true);
+        });
+        break;
+      case "contextMenus":
+        let visible = this.testContextMenu(data);
+        console.log('显示右键', visible)
+        chrome.contextMenus.update("MIYA", { visible });
         sendResponse();
-      } catch (ere) {
-        sendResponse(err);
-        return;
-      }
-      break;
-    case 'history': 
-      chrome.storage.local.get("history").then(({history}) => {
-        console.log(history);
-        sendResponse(history)
-      });
-      break
+        break;
+    }
+    return true;
   }
-  return true
-});
-
-
-//#region 右鍵菜單處理
-// 生成右鍵菜單
-let isCreateMenu = false;
-function contextMenus (type) {
-  if (type) {
-    if (isCreateMenu) return;
-    isCreateMenu = true;
+  // 创建右鍵菜單
+  contextMenus() {
     let option = [
       { id: "1", name: "隨機" },
       { id: "2", name: "手動" },
     ];
-    option.forEach((item, index) => {
-      chrome.contextMenus.create({
-        title: "beta_" + item.name,
-        // parentId: betaRoot,
-        id: "beta_" + item.id,
-      });
+    let ctxId = chrome.contextMenus.create({
+      title: "MIYA",
+      id: "MIYA",
     });
-    option.forEach((item, index) => {
-      chrome.contextMenus.create({
-        title: "staging_" + item.name,
-        // parentId: stagingRoot,
-        id: "staging_" + item.id,
+    ['beta', 'staging'].forEach(env => {
+      option.forEach((item, index) => {
+        chrome.contextMenus.create({
+          title: `${env}_${item.name}`,
+          id: `${env}_${item.id}`,
+          parentId: ctxId,
+        });
       });
-    });
-    return
+    })
   }
-  isCreateMenu = false;
-  chrome.contextMenus.removeAll();
+  // 获取key
+  async getKey({ id, name, env, tabId }) {
+    let historyStore = await this.storage.history;
+    let link = `${this.server[env]}${this.servicesApi.newLogin}?flash=true&`;
+    if (id) {
+      link += `id=${id}`;
+    } else {
+      name = name || this.random(10);
+      link += `name=${name}`;
+    }
+    let key = await fetch(link).then((res) => res.text());
+    let { uid } = JSON.parse(atob(key.split(".")[1]));
+    let history = historyStore?.history || [];
+    history.unshift({ env, name, key, uid, create: Date.now() });
+    await (this.storage.history = history);
+    await this.jumpUrl(tabId, { key });
+    return key;
+  }
+
+  // 跳轉鏈接
+  async jumpUrl(tabId, params = {}) {
+    let targetTab = await chrome.tabs.get(+tabId);
+    let url = targetTab.url;
+    for (let key in params) {
+      url = this.setUrlParam(url, key, params[key]);
+    }
+    await chrome.tabs.update(targetTab.id, {
+      url,
+      active: true,
+    });
+  }
+
+  // 隨機生成名字
+  random(prefix, randomLength) {
+    prefix === undefined ? (prefix = "") : prefix;
+    randomLength === undefined ? (randomLength = 8) : randomLength;
+    let str = prefix;
+    // 字符编码
+    let strArr = [
+      ['0'.charCodeAt(0), 10], // 数字
+      ['a'.charCodeAt(0), 26], // 小写字母
+      ['A'.charCodeAt(0), 26]  // 大写字母
+    ];
+    for (var i = 0; i < randomLength; i++) {
+      // 随机生成index
+      let index = Math.floor(Math.random() * strArr.length);
+      let charCode = strArr[index][0] + Math.floor(Math.random() * strArr[index][1]);
+      str += String.fromCharCode(charCode)
+    }
+    return str
+  }
+
+  // 獲取url參數
+  getUrlParam(url, searchKey) {
+    let urlObj = new URL(url);
+    let searchParam = urlObj.searchParams;
+    if (searchKey) {
+      return searchParam.get(searchKey);
+    }
+    let arr = [];
+    searchParam.forEach((value, key) => {
+      arr.push({ key, value });
+    });
+    return arr;
+  }
+
+  // 設置url參數
+  setUrlParam(url, key, val) {
+    let urlObj = new URL(url);
+    let searchParam = urlObj.searchParams;
+    searchParam.set(key, val);
+    return urlObj.toString();
+  }
+  testContextMenu (url) {
+    return this.whiteListReg.some((item) => item.test(url));
+  }
 }
-
-// 監聽右鍵點擊
-chrome.contextMenus.onClicked.addListener(async function (info, tab) {
-  let [env, type] = info.menuItemId.split("_");
-  switch (type) {
-    case "1":
-      getKey({ env, tabId: tab.id });
-      break;
-    case "2":
-      chrome.windows.create({
-        url: `index.html#/popup?env=${env}&type=${type}&tabId=${tab.id}`,
-        width: popup.width,
-        height: popup.height,
-        left: Math.ceil(tab.width / 2 - popup.width / 2),
-        top: Math.ceil(tab.height / 2 - popup.height / 2),
-        type: "popup",
-      });
-      break;
-    default:
-      break;
-  }
-});
-
-// 選中tab
-chrome.tabs.onActivated.addListener(async ({tabId}) => {
-  let actTab = await chrome.tabs.get(tabId);
-  if (testWhiteList(actTab.url)) {
-    contextMenus(true);
-    return
-  }
-  contextMenus(false);
-})
-
-// tab更新
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (tab.active && testWhiteList(tab.url)) {
-    contextMenus(true);
-    return
-  }
-  contextMenus(false);
-})
-//#endregion
+let background = new Background();
