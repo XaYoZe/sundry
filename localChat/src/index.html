@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<style>
+  div {
+    margin-bottom: 20px;
+  }
+  ul {
+    list-style: none;
+    padding: 20px;
+  }
+  li.isYou {
+    text-align: right;
+  }
+</style>
+<body>
+  <div>
+    <div>SSE</div>
+    <div>
+      <input type="text" value="1" placeholder="输入房间" id="roomId"><button onclick="subscriptSSE()">订阅sse</button><button onclick="clickBtn()">取消订阅</button>
+    </div>
+    <div>
+      <input type="text" placeholder="输入文本" id="sendText"><button onclick="sendData()">发送</button>
+    </div>
+    <div>
+      <p>接受信息</p>
+      <p id="userInfo"></p>
+      <ul id="message">
+
+      </ul>
+    </div>
+  </div>
+</body>
+<script>
+  let id = 0;
+  let userId = 0;
+  function subscriptSSE () {
+    userId =  Date.now();
+    id = roomId.value;
+    let sse = new EventSource(`/api/sse?userId=${ userId }&roomId=${ id }`)
+    userInfo.innerText = `用户Id: ${ userId }; 房间号: ${ id }`;
+    console.log('点击订阅', sse)
+    sse.addEventListener('open', (e) => {
+      console.log('连接成功', e)
+      fetch(`/history?roomId=${ id }`).then(async res => {
+        let list =  await res.json();
+        list.forEach(li => {
+          createList(li);
+        })
+      })
+    })
+    sse.addEventListener('message', (e) => {
+      let data = JSON.parse(e.data);
+      createList(data);
+      console.log('message', data)
+    })
+    sse.addEventListener('close', (e) => {
+      console.log('关闭连接',  JSON.parse(e.data))
+      sse.close();
+    })
+    sse.addEventListener('error', (e) => {
+      console.log('链接错误',  e)
+      sse.close();
+    })
+  }
+  function createList (listData) {
+    let li = document.createElement('li');
+    li.className = listData.userId == userId ? 'isYou' : '';
+    li.innerText = listData.userId == userId ? `${listData.text}: 你` : `${listData.userId}: ${listData.text}`; 
+    message.append(li)
+  }
+  function sendData () {
+    console.log(`/sendData?text=${ sendText.value }&roomId=${ id }&userId=${ userId }`)
+    fetch(`/sendData?text=${ sendText.value }&roomId=${ id }&userId=${ userId }`).then(res => {
+      console.log('发送成功');
+    })
+  }
+</script>
+</html>
