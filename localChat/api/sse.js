@@ -1,12 +1,11 @@
-// const http = require('http')
-let url = require("url");
+import url from 'node:url';
 /**
  * 接口处理
  * @this { import('../server.js').default }
  * @param  { import('http').IncomingMessage } req http请求信息
  * @param { import('http').ServerResponse } res http返回信息
  */
-exports.default = function (req, res) {
+export default function (req, res) {
   console.log(this.store.subList);
   let reqUrl = url.parse(req.url, true);
   let { roomId, userId } = reqUrl.query;
@@ -14,10 +13,9 @@ exports.default = function (req, res) {
   if (roomId) {
     // 加入房間
     ((this.store.subList || (this.store.subList = {}))[roomId] || (this.store.subList[roomId] = [])).push(res);
-    if (!this.store.subList) {
-      this.store.subList.push
-
-    }
+    // if (!this.store.subList) {
+    //   this.store.subList.push
+    // }
     // !this.store.subList && (this.store.subList[roomId] = [])
     // 退出房間
     res.on("close", () => {

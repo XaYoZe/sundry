@@ -1,10 +1,11 @@
 
  // 用来保存数据
-let store = new Proxy({
+const store = new Proxy( {
   _data: {},
   _watch: {}, // 监听值变化列表
   _computed: {},
   _initComputedList: [],
+  _deepWatchList: [], // 对象监听列表
   // 添加监听值变化
   watch: function (name, call) {
     (this._watch[name] || (this._watch[name] = [])).push(call);
@@ -38,6 +39,35 @@ let store = new Proxy({
       return 3
     }
     return 0
+  },
+  // 对象深度监听
+  deepProxy (prop, newVal, oldVal, call) {
+    if (newVal === oldVal) return oldVal;
+    if (typeof newVal === 'object') {
+      const _that = this;
+      let proxy = new Proxy(newVal, {
+        set (_this, _prop, _value) {
+          let _oldVal = _this[_prop];
+          let _newVal = _that.deepProxy(`${prop}.${_prop}`, _value, _oldVal, call);
+          _this[_prop] = _newVal;
+          // 在监听列表中才调用
+          if (_that._deepWatchList.includes(`${prop}`) && _oldVal !== _newVal) {
+            call && call(_newVal, _oldVal)
+          }
+          return _value
+        }
+      })
+      for (let key in newVal) {
+        newVal[key] = this.deepProxy(`${prop}.${ key }`, newVal[key], newVal[key], call)
+      }
+      // 添加该对象名到列表
+      this._deepWatchList.push(prop);
+      // 返回代理的对象
+      return proxy
+    }
+    // 如果有深度监听则删除
+    this._deepWatchList = this._deepWatchList.filter(item => item.indexOf(prop) !== 0);
+    return newVal
   }
 }, {
   get (_this, prop) {
@@ -84,13 +114,13 @@ let store = new Proxy({
       let lastKey = _this._initComputedList.slice(-1)[0]; // 最后初始化的计算属性名
       switch (attrType) {
         case 2: 
-          if (!_this._computed[lastKey].watchList.includes(attrName)) {
-            _this._computed[lastKey].watchList.push(attrName);
+          if (!_this._computed[lastKey].watchList.includes(prop)) {
+            _this._computed[lastKey].watchList.push(prop);
           }
           break
         case 3:
-          console.log(attrName, _this._computed[attrName].watchList)
-          _this._computed[attrName].watchList.forEach(item => {
+          console.log(prop, _this._computed[prop].watchList)
+          _this._computed[prop].watchList.forEach(item => {
             console.log(item)
             if (!_this._computed[lastKey].watchList.includes(item)) {
               _this._computed[lastKey].watchList.push(item);
@@ -100,9 +130,8 @@ let store = new Proxy({
         default:
           break;
       }
-      _this._computed[lastKey].useList.push(attrName);
+      _this._computed[lastKey].useList.push(prop);
     }
-
     return returnValue
   },
   set (_this, prop, value) {
@@ -115,10 +144,14 @@ let store = new Proxy({
     let newVal = value;
     let oldVal = _this._data[prop];
     // _this.watchChangeStart(prop, _this._data[prop], val)
-    _this._data[prop] = newVal;
+    _this._data[prop] = _this.deepProxy(prop, newVal, oldVal, (_newVal, _oldVal) => {
+      // 对象内值变化触发
+      _this.watchChangeEnd(prop, _newVal, _oldVal)
+    });
     _this.watchChangeEnd(prop, newVal, oldVal)
-    return value
+    return _this._data[prop]
   }
 });
 
-exports.default = store
+export default store;
+// exports.default = store
