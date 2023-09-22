@@ -1,82 +1,148 @@
-import path from 'node:path';
-import fs from 'node:fs';
-import http from 'node:http';
-import url from 'node:url';
-import store from './store.js';
-import child_process from 'node:child_process';
+import path from "node:path";
+import fs from "node:fs";
+import http from "node:http";
+import url from "node:url";
+import store from "./store.js";
+import child_process from "node:child_process";
 
-let filePath = url.fileURLToPath(import.meta.url)
+import { createServer } from "vite";
+
+let filePath = url.fileURLToPath(import.meta.url);
 let dirPath = path.dirname(filePath);
 class Server {
   server = null; // 服务
   ssr = null;
-  apiCacheList = []; // 接口方法缓存
+  apiPath = ''
+  apiCache = {}; // 接口方法缓存
+  fileCache = {}; // 文件缓存
   store = store;
-  srcPath = path.resolve(dirPath, './src');
   port = 8080; // 启动端口
-  constructor () {
+  useList = [];
+  defaultPathReg = /.*?/
+  constructor() {
     this.createServer();
-    child_process.exec('vite build --watch')
   }
-  createServer () {
-    this.server = http.createServer(async (req, res) => {
-      let reqUrl = url.parse(req.url, true);
-      console.log(reqUrl.pathname);
-      // 接口处理
-      if (/\/api\//.test(reqUrl.pathname)) {
-        try {
-          let api = this.apiCacheList[reqUrl.pathname]
-          if (!api) {
-            let requireFn = await import('.' + reqUrl.pathname + '.js');
-            api = requireFn?.default || requireFn;
-            this.apiCacheList[reqUrl.pathname] = api;
-          }
-          api.apply(this, [req, res]);
-        } catch (err) {
-          console.log(err);
-          res.statusCode = 404;
-          res.end(JSON.stringify(err))
+  // 中间件
+  use (path, cb) {
+    let reg = this.defaultPathReg;
+    if (cb) {
+      if (typeof path === 'string') {
+        reg = new RegExp(path.replace('*', '\.\*\?'))
+      } else {
+        reg = path
+      }
+    } else {
+      cb = path;
+    }
+    this.useList.push({reg, cb})
+  }
+  // 中间件调用
+  useCall (req, res, index = 0) {
+    let useItem = this.useList[index];
+    if (useItem) {
+      // console.log(useItem.reg, req.url, useItem.reg.test(req.url))
+      // req.urlParse = urlParse
+      if (useItem.reg.test(req.urlParse.pathname)) {
+        useItem.cb(req, res, this.useCall.bind(this, req, res, index + 1))
+      } else {
+        this.useCall(req, res, index + 1)
+      }
+    }
+  }
+  // 创建服务
+  async createServer() {
+    const vite = await createServer({
+      server: { 
+        middlewareMode: true,
+        fs: {
+          allow: ['./src/', './index.html', './public/', './node_modules/', './common']
         }
-      } else if (req.method === "GET") {
-        try {
-          if (reqUrl.pathname === "/") {
-            // ssr.apply(this, [req, res]);
-            // ssr(req,res).appli
-            // try {
-              
-            //   if (!this.ssr) {
-            //     let requireFn = require('./ssr.js');
-            //     ssr = requireFn?.default || requireFn;
-            //     this.ssr = ssr;
-            //   }
-            //   this.ssr.apply(this, [req, res]);
-            // } catch (err) {
-            //   console.log(err);
-            //   res.statusCode = 404;
-            //   res.end(JSON.stringify(err))
-            // }
-            res.end(await fs.readFileSync(path.join(dirPath, './src/index.html', )));
-          } else {
-            let fileUrl = reqUrl.pathname;
-            if (/\.js$/.test(fileUrl)) {
-              res.setHeader('Content-Type', 'application/javascript')
-            }
-            fileUrl = path.join(dirPath, './dist', fileUrl);
-            res.end(await fs.readFileSync(fileUrl));
+      },
+      appType: "custom",
+    });
+    this.use(vite.middlewares);
+    // 首页处理
+    this.use(/\/(index\.html)?$/, (req, res, next) => {
+      fs.readFile(
+        path.join(dirPath, "./index.html"),
+        { encoding: "utf-8" },
+        (err , data) => {
+          if (err) {
+            next()
+            return
           }
-        } catch (err) {
-          console.log(err);
+          res.end(data);
+        }
+      );
+    })
+    // 接口处理
+    this.use(/^\/api\//, async (req, res, next) => {
+      let pathname = req.urlParse.pathname;
+      // 接口缓存
+      let api = this.apiCache[pathname];
+      if (!api) {
+       import("." + pathname + ".js").then(module => {
+        api = module.default || module;
+        this.apiCache[pathname] = api;
+        api.apply(this, [req, res]);
+       }).catch(err => {
+         res.statusCode = 404;
+         res.end(JSON.stringify(err))
+       })
+      } else {
+        api.apply(this, [req, res]);
+      }
+    })
+    // 资源处理
+    this.use(async (req, res) => {
+      if (this.fileCache[req.urlParse.pathname]) {
+        res.end(this.fileCache[req.urlParse.pathname])
+        return
+      }
+      let fileUrl = req.urlParse.pathname;
+      if (/\.js$/.test(fileUrl)) {
+        res.setHeader("Content-Type", "application/javascript");
+      }
+      fileUrl = path.join(dirPath, "./dist", fileUrl);
+      fs.readFile(fileUrl, (err, data) => {
+        if (err) {
           res.statusCode = 404;
           res.end();
+          return
         }
-      } else {
-        res.end(await fs.readFileSync(path.join(this.srcPath, "/404.html")));
-      }
-    }).listen(8080, () => {
-      console.log("啟動服務", 'http://localhost:8080');
-    });
+        this.fileCache[req.urlParse.pathname] = data;
+        res.end(data);
+      })
+    })
+    // 启动服务
+    this.server = http.createServer(async (req, res) => {
+      this.parseReqRes(req, res)
+      this.useCall(req, res)
+    })
+      .listen(8080, () => {
+        console.log("啟動服務", "http://localhost:8080");
+      });
+  }
+  // req和res添加修改
+  parseReqRes (req, res) {
+    console.time('接口处理耗时：' + req.url)
+    let ip =  req.headers['x-forwarded-for'] || 
+    req.ip ||
+    req.connection.remoteAddress ||
+    req.socket.remoteAddress ||
+    req.connection.socket.remoteAddress || '';
+    req.ip = ip;
+    req.urlParse =url.parse(req.url, true);
+    req.createTime = Date.now();
+    let end = res.end;
+    res.end = function (...item) {
+      console.timeEnd('接口处理耗时：' + req.url)
+      res.setHeader('x-expend-time', String(Date.now() - req.createTime) + 'ms')
+      return end.apply(res, item)
+    }
+    return req
   }
 }
 const server = new Server();
-export default server
+export default server;
 // exports.default = server;
