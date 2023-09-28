@@ -1,6 +1,6 @@
 
  // 用来保存数据
-const store = new Proxy( {
+const store = new Proxy({
   _data: {},
   _watch: {}, // 监听值变化列表
   _computed: {},

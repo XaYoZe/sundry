@@ -16,7 +16,7 @@
 <script setup>
 import { onBeforeMount, ref } from "vue";
 import { dateFromat, getUrlParam, setUrlParam } from "@js/common.js";
-import apiCall from '@js/apiCall.js';
+import apiCall, { socket } from '@js/apiCall.js';
 window.apiCall = apiCall;
 
 onBeforeMount(() => {

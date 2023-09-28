@@ -27,7 +27,7 @@ export function proxyEncode (data) {
  * @param {String} data 待解析字符
  * @returns 解密后字符
  */
-export function proxyDecode (data) {
+export function proxyDecode (data = '') {
   let newStr = ''
   let code = data.charCodeAt(0)
   for (let i = 1; i < data.length; i++) {
