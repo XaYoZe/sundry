@@ -1,0 +1,134 @@
+{
+  "ver": "1.0.25",
+  "importer": "image",
+  "imported": true,
+  "uuid": "07dc1a1e-38fe-43d0-9a1f-596719f2b47f",
+  "files": [
+    ".json",
+    ".png"
+  ],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "07dc1a1e-38fe-43d0-9a1f-596719f2b47f@6c48a",
+      "displayName": "结束动画表情2_011_125",
+      "id": "6c48a",
+      "name": "texture",
+      "userData": {
+        "wrapModeS": "clamp-to-edge",
+        "wrapModeT": "clamp-to-edge",
+        "imageUuidOrDatabaseUri": "07dc1a1e-38fe-43d0-9a1f-596719f2b47f",
+        "isUuid": true,
+        "visible": false,
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f9941": {
+      "importer": "sprite-frame",
+      "uuid": "07dc1a1e-38fe-43d0-9a1f-596719f2b47f@f9941",
+      "displayName": "结束动画表情2_011_125",
+      "id": "f9941",
+      "name": "spriteFrame",
+      "userData": {
+        "trimType": "auto",
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": -236.5,
+        "offsetY": -447,
+        "trimX": 183,
+        "trimY": 894,
+        "width": 161,
+        "height": 106,
+        "rawWidth": 1000,
+        "rawHeight": 1000,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [
+            -80.5,
+            -53,
+            0,
+            80.5,
+            -53,
+            0,
+            -80.5,
+            53,
+            0,
+            80.5,
+            53,
+            0
+          ],
+          "indexes": [
+            0,
+            1,
+            2,
+            2,
+            1,
+            3
+          ],
+          "uv": [
+            183,
+            106,
+            344,
+            106,
+            183,
+            0,
+            344,
+            0
+          ],
+          "nuv": [
+            0.183,
+            0,
+            0.344,
+            0,
+            0.183,
+            0.106,
+            0.344,
+            0.106
+          ],
+          "minPos": [
+            -80.5,
+            -53,
+            0
+          ],
+          "maxPos": [
+            80.5,
+            53,
+            0
+          ]
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "07dc1a1e-38fe-43d0-9a1f-596719f2b47f@6c48a",
+        "atlasUuid": ""
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "type": "sprite-frame",
+    "fixAlphaTransparencyArtifacts": true,
+    "hasAlpha": true,
+    "redirect": "07dc1a1e-38fe-43d0-9a1f-596719f2b47f@f9941"
+  }
+}
