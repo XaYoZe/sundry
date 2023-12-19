@@ -8,6 +8,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      'vue': 'vue/dist/vue.esm-bundler.js',
       '~bootstrap': '/node_modules/bootstrap',
       '~bootstrapIcons': '/node_modules/bootstrap-icons',
       '@icon': '/node_modules/bootstrap-icons/icons',

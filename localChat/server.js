@@ -66,12 +66,16 @@ class Server {
       fs.readFile(
         path.join(dirPath, "./index.html"),
         { encoding: "utf-8" },
-        (err , data) => {
+        async (err , data) => {
           if (err) {
             next()
             return
           }
-          res.end(data);
+          let html = await vite.transformIndexHtml(req.url, data)
+          let {render} = await  vite.ssrLoadModule('./src/entry-server.js')
+          html = html.replace('<!--server-html-->',await render())
+          console.log(html)
+          res.end(html);
         }
       );
     })
