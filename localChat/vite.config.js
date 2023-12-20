@@ -30,5 +30,7 @@ export default defineConfig({
       exclude: ['public/*']
     }
   },
-  plugins: [vue()],
+  plugins: [vue({
+    
+  })],
 })

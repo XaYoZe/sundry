@@ -1,8 +1,10 @@
 
 <template>
-  <router-view></router-view>
+  <router-view  v-slot="{ Component }">
+    <component :is="Component" />
+  </router-view>
 </template>
-<script>
+<script lang="ts" setup>
 // import { socket } from '@js/apiCall.js';
 // import { onMounted } from 'vue';
 // onMounted(() => {
@@ -10,6 +12,6 @@
 //   window.socket = socket;
 
 // })
-// </script>
-<style scoped lang="scss">
-</style>
+console.log(1111);
+</script>
+<style scoped lang="scss"></style>

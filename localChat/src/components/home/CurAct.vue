@@ -17,7 +17,6 @@
 import { onBeforeMount, ref } from "vue";
 import { dateFromat, getUrlParam, setUrlParam } from "@js/common.js";
 import apiCall, { socket } from '@js/apiCall.js';
-window.apiCall = apiCall;
 
 onBeforeMount(() => {
   apiCall.getData({"id": 100143}).then(res => {

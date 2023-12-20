@@ -1,5 +1,5 @@
 import path from "node:path";
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import http from "node:http";
 import url from "node:url";
 import store from "./store.js";
@@ -61,24 +61,40 @@ class Server {
       appType: "custom",
     });
     this.use(vite.middlewares);
-    // 首页处理
-    this.use(/\/(index\.html)?$/, (req, res, next) => {
-      fs.readFile(
-        path.join(dirPath, "./index.html"),
-        { encoding: "utf-8" },
-        async (err , data) => {
-          if (err) {
-            next()
-            return
-          }
-          let html = await vite.transformIndexHtml(req.url, data)
-          let {render} = await  vite.ssrLoadModule('./src/entry-server.js')
-          html = html.replace('<!--server-html-->',await render())
-          console.log(html)
-          res.end(html);
-        }
-      );
+
+    this.use(/.*/, async (req, res, next) => {
+      try {
+        let template = await fs.readFile(path.join(dirPath, "./index.html"), { encoding: "utf-8" });
+        template = await vite.transformIndexHtml(req.url, template)
+        let ssrLoadModule = (await vite.ssrLoadModule('./server/index.js'))
+        let renderer = await ssrLoadModule.render(req.url, {});
+        res.end(template.replace('<!--server-render-->', renderer[0]));
+        return
+      } catch (err) {
+        console.log(err);
+      }
+      next()
     })
+    // 首页处理
+    // this.use(/\/(index\.html)?$/, (req, res, next) => {
+    //   fs.readFile(
+    //     path.join(dirPath, "./index.html"),
+    //     { encoding: "utf-8" },
+    //     async (err , data) => {
+    //       if (err) {
+    //         next()
+    //         return
+    //       }
+    //       let html = await vite.transformIndexHtml(req.url, data)
+    //       let {render} = await  vite.ssrLoadModule('./src/entry-server.js')
+    //       let renderer = await render(req);
+    //       router = renderer.router;
+    //       html = html.replace('<!--server-html-->', renderer.html)
+    //       console.log(html)
+    //       res.end(html);
+    //     }
+    //   );
+    // })
     // 接口处理
     this.use(/^\/api\//, async (req, res, next) => {
       let pathname = req.urlParse.pathname;
@@ -108,15 +124,15 @@ class Server {
         res.setHeader("Content-Type", "application/javascript");
       }
       fileUrl = path.join(dirPath, "./dist", fileUrl);
-      fs.readFile(fileUrl, (err, data) => {
-        if (err) {
-          res.statusCode = 404;
-          res.end();
-          return
-        }
-        this.fileCache[req.urlParse.pathname] = data;
-        res.end(data);
-      })
+      try {
+        let fileData = await fs.readFile(fileUrl);
+        this.fileCache[req.urlParse.pathname] = fileData;
+        res.end(fileData);
+      } catch (err) {
+        res.statusCode = 404;
+        res.end();
+        return
+      }
     })
     // 启动服务
     this.server = http.createServer(async (req, res) => {

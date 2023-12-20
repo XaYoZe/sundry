@@ -9,7 +9,8 @@
 
 import { proxyEncode, proxyDecode } from '@common';
 
-const apiCall = new Proxy({}, {
+
+const apiCall = import.meta.env.SSR? {} : new Proxy({}, {
   get (_this, prop) {
     // 如果已有方法屬性, 則返回已有方法屬性
     if (_this[prop]) {
@@ -32,7 +33,6 @@ const apiCall = new Proxy({}, {
     }
   }
 })
-
 class Socket {
   socket = null;
   eventTarget = new EventTarget();
@@ -48,11 +48,13 @@ class Socket {
 
   }
   init () {
-    this.socket = new WebSocket(this.socketUrl);
-    this.socket.addEventListener('message', this.onMessage.bind(this), this);
-    this.socket.addEventListener('open', this.onOpen.bind(this), this);
-    this.socket.addEventListener('error', this.onError.bind(this), this);
-    this.socket.addEventListener('close', this.onClone.bind(this), this);
+    if (!import.meta.env.SSR) {
+      this.socket = new WebSocket(this.socketUrl);
+      this.socket.addEventListener('message', this.onMessage.bind(this), this);
+      this.socket.addEventListener('open', this.onOpen.bind(this), this);
+      this.socket.addEventListener('error', this.onError.bind(this), this);
+      this.socket.addEventListener('close', this.onClone.bind(this), this);
+    }
   }
   onOpen (e) {
     this.status = 1;
@@ -109,4 +111,5 @@ export let socket = new Proxy(new Socket, {
     }
   }
 })
+
 export default apiCall;

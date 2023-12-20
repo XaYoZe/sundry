@@ -43,9 +43,6 @@ import { ref } from "vue";
 import { dateFromat, setUrlParam } from '@js/common.js'
 
 let historyList = ref([]);
-chrome?.runtime?.sendMessage({type: 'get', data: 'history'}, (res) => {
-  historyList.value = res
-})
 
 const clickUse = async (item) => {
   let [tab] = await chrome.tabs.query({active: true, currentWindow: true});

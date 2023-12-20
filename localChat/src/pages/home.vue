@@ -76,17 +76,23 @@
     </div> -->
   <!-- </div> -->
 </template>
-<script setup>
-import { ref, defineAsyncComponent, computed, onBeforeMount } from "vue";
-
-let navbar = ref([
+<script lang="ts" setup>
+import { ref, defineAsyncComponent, computed, onBeforeMount, onServerPrefetch } from "vue";
+import useDataStore from '../pinia/data'
+let dataStore = useDataStore();
+console.log(dataStore.a)
+let navbar = [
   { text: "首頁", component: defineAsyncComponent(() => import('@cpt/home/CurAct.vue')) },
   { text: "記錄", component: defineAsyncComponent(() => import('@cpt/home/History.vue')) },
   { text: "設置", component: defineAsyncComponent(() => import('@cpt/home/Setting.vue')) },
-]);
+];
 let active = ref(0);
 let curPage = computed(() => {
-  return navbar.value[active.value];
+  return navbar[active.value];
+})
+
+onServerPrefetch(() => {
+  console.log('serverPrefetch')
 })
 
 onBeforeMount(async () => {
