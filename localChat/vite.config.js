@@ -12,25 +12,27 @@ export default defineConfig({
       '~bootstrap': '/node_modules/bootstrap',
       '~bootstrapIcons': '/node_modules/bootstrap-icons',
       '@icon': '/node_modules/bootstrap-icons/icons',
+      '@pinia': '/views/pinia',
       '@common': '/common/',
-      '@cpt': '/src/components',
-      '@js': '/src/js',
+      '@cpt': '/views/components',
+      '@js': '/views/js',
+      '@style': '/views/assets/style',
+      '@image': '/views/assets/image',
     }
   },
+  publicDir: '/views/public',
   server: {
     watch: {
       clearScreen: true,
-      exclude: ['public/*']
+      exclude: ['/views/public/*']
     }
   },
   build: {
     sourcemap: "inline",
     watch: {
       clearScreen: true,
-      exclude: ['public/*']
+      exclude: ['/views/public/*']
     }
   },
-  plugins: [vue({
-    
-  })],
+  plugins: [vue()],
 })

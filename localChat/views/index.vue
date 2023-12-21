@@ -3,6 +3,7 @@
   <router-view  v-slot="{ Component }">
     <component :is="Component" />
   </router-view>
+  <PopupCtrl></PopupCtrl>
 </template>
 <script lang="ts" setup>
 // import { socket } from '@js/apiCall.js';
@@ -12,6 +13,5 @@
 //   window.socket = socket;
 
 // })
-console.log(1111);
 </script>
 <style scoped lang="scss"></style>

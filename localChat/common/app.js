@@ -1,18 +1,26 @@
-import { createSSRApp } from 'vue'
-import index from '../src/index.vue'
-import createRoute from '../src/router'
-import { createPinia } from 'pinia'
-import piniaCachePlugin from '../src/pinia/piniaCachePlugin'
+import { createSSRApp, defineAsyncComponent } from 'vue';
+import index from '../views/index.vue';
+import createRoute from '../views/router';
+import { createPinia } from 'pinia';
+import piniaCachePlugin from '../views/pinia/piniaCachePlugin';
 
 export function createApp () {
   const app = createSSRApp(index);
   const router = createRoute();
-  const pinia = createPinia()
-  app.use(router)
+  const pinia = createPinia();
+  app.use(router);
+  app.provide('isSSR', import.meta.env.SSR);
   if (import.meta.env.SSR) {
-    app.use(pinia)
+    app.use(pinia);
   } else {
-    app.use(pinia.use(piniaCachePlugin))
+    app.use(pinia.use(piniaCachePlugin));
+  }
+
+  // 注册弹窗
+  let popupComponents = import.meta.glob('../views/components/popup/*.vue'/***/, { eager: false });
+  for (let key in popupComponents) {
+    let name = key.split('/').pop().replace('.vue', '');
+    app.component(name, defineAsyncComponent(popupComponents[key]))
   }
   return {app, router} 
 }

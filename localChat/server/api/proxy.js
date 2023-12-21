@@ -1,6 +1,6 @@
 
 import querystring from 'node:querystring'
-import { proxyEncode, proxyDecode } from '../common/index.js';
+import { proxyEncode, proxyDecode } from '../../common/index.js';
 /**
  * 接口处理
  * @this { import('../server.js').default }
@@ -8,7 +8,6 @@ import { proxyEncode, proxyDecode } from '../common/index.js';
  * @param { import('http').ServerResponse } res http返回信息
  */
 export default function (req, res) {
-  console.log(this.store.subList);
   // let reqUrl = url.parse(req.url, true);
   // let { roomId, userId } = reqUrl.query;
   if (req.method === "POST") {

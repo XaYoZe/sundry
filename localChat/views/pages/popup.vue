@@ -20,25 +20,6 @@ const { env, type, tabId } = $route.query;
 let id = ref("");
 let name = ref("");
 let errorTip = ref(false);
-async function clickConfirm() {
-  chrome.runtime.sendMessage(undefined, {
-    type: 'getKey',
-    data: {
-      id: id.value,
-      name: name.value,
-      env,
-      tabId
-    }
-  }, undefined,async (err) => {
-    console.log('接受回調', err)
-    if (err) {
-      errorTip.value = true;
-      console.log("獲取key失敗", err);
-      return
-    }
-    await chrome.tabs.remove((await chrome.tabs.getCurrent()).id);
-  })
-}
 </script>
 
 <style lang="scss">

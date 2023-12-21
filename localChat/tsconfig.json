@@ -5,10 +5,13 @@
     "lib": ["es2016", "dom"],
     "types": ["vite/client"],
     "paths": {
-      "@cpt/*": ["src/components/*"],
+      "@cpt/*": ["views/components/*"],
+      "@js": ["views/js"],
       "@icon": ["node_modules/bootstrap-icons/icons"],
       "@common":[ "common/"],
-      "@js": ["src/js"]
+      "@pinia": ["/views/pinia"],
+      "@style": ["/views/assets/style"],
+      "@image": ["/views/assets/image"],
     }
   }
 }

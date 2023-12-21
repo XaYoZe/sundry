@@ -1,6 +1,6 @@
 import url from "node:url";
 import crypto from "node:crypto";
-import { proxyEncode, proxyDecode } from '../common/index.js';
+import { proxyEncode, proxyDecode } from '../../common/index.js';
 var WS = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 // 报文解析

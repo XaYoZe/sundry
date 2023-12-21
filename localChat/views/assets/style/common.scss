@@ -1,0 +1,96 @@
+html, body, #app {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  font-family: sans-serif, "Microsoft Yahei";
+  color: #FFFFFF;
+  font-size: 16px;
+  line-height: 1;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  outline: 0;
+  list-style: none;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  box-sizing: border-box;
+  &:-webkit-placeholder {
+    color: #fff;
+  }
+  &:focus {
+    outline: none;
+  }
+}
+
+button {
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 3px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  background-color: #99a9bf;
+}
+
+::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  border-radius: 5px;
+  background-color: #d3dce6;
+}
+
+
+@mixin setBgImg($url: null, $position: center, $size: 100%, $default: null) {
+  @if $url == null {
+    background: {
+      position: $position;
+      size: $size;
+      repeat: no-repeat;
+    }
+  } @else {
+    background: {
+      position: $position;
+      size: $size;
+      repeat: no-repeat;
+      image: url($url);
+    }
+  }
+}
+
+// margin 居中
+@mixin marginCenter($top: 0, $bottom: 0) {
+  margin: $top auto $bottom;
+}
+
+// flex 居中
+@mixin flexCenter($x: center, $y: center, $direction: row) {
+  display: flex;
+  justify-content: $x;
+  align-items: $y;
+  align-content: $y;
+  flex-direction: $direction;
+}
+
+// position 居中
+@mixin positionCenter($left: 50%, $top: 50%) {
+  position: absolute;
+  left: $left;
+  top: $top;
+  @if $left == 50% and $top == 50% {
+    transform: translate(-50%, -50%);
+  } @else if $left == 50% {
+    transform: translateX(-50%);
+  } @else {
+    transform: translateY(-50%);
+  }
+}

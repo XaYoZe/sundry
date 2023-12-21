@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import http from "node:http";
 import url from "node:url";
-import store from "./store.js";
+import store from "./server/store.js";
 import child_process from "node:child_process";
 
 import { createServer } from "vite";
@@ -55,12 +55,32 @@ class Server {
       server: { 
         middlewareMode: true,
         fs: {
-          allow: ['./src/', './index.html', './public/', './node_modules/', './common']
+          allow: ['./views/', './index.html', './node_modules/', './common']
         }
       },
       appType: "custom",
     });
     this.use(vite.middlewares);
+    
+    // 接口处理
+    this.use(/^\/api\//, async (req, res, next) => {
+      let pathname = req.urlParse.pathname;
+      // 接口缓存
+      let api = this.apiCache[pathname];
+      if (!api) {
+       import("./server" + pathname + ".js").then(module => {
+        api = module.default || module;
+        this.apiCache[pathname] = api;
+        api.apply(this, [req, res]);
+       }).catch(err => {
+        next()
+        //  res.statusCode = 404;
+        //  res.end(JSON.stringify(err))
+       })
+      } else {
+        api.apply(this, [req, res]);
+      }
+    })
 
     this.use(/.*/, async (req, res, next) => {
       try {
@@ -95,24 +115,6 @@ class Server {
     //     }
     //   );
     // })
-    // 接口处理
-    this.use(/^\/api\//, async (req, res, next) => {
-      let pathname = req.urlParse.pathname;
-      // 接口缓存
-      let api = this.apiCache[pathname];
-      if (!api) {
-       import("." + pathname + ".js").then(module => {
-        api = module.default || module;
-        this.apiCache[pathname] = api;
-        api.apply(this, [req, res]);
-       }).catch(err => {
-         res.statusCode = 404;
-         res.end(JSON.stringify(err))
-       })
-      } else {
-        api.apply(this, [req, res]);
-      }
-    })
     // 资源处理
     this.use(async (req, res) => {
       if (this.fileCache[req.urlParse.pathname]) {
@@ -145,19 +147,19 @@ class Server {
   }
   // req和res添加修改
   parseReqRes (req, res) {
-    console.time('接口处理耗时：' + req.url)
+    let createTime = new Date();
+    let reqUrl = req.url;
     let ip =  req.headers['x-forwarded-for'] || 
     req.ip ||
     req.connection.remoteAddress ||
     req.socket.remoteAddress ||
     req.connection.socket.remoteAddress || '';
     req.ip = ip;
-    req.urlParse =url.parse(req.url, true);
-    req.createTime = Date.now();
+    console.time(`${createTime.toLocaleString()}, ${ ip }, 耗时：${ reqUrl }`)
+    req.urlParse = url.parse(reqUrl, true);
     let end = res.end;
     res.end = function (...item) {
-      console.timeEnd('接口处理耗时：' + req.url)
-      res.setHeader('x-expend-time', String(Date.now() - req.createTime) + 'ms')
+      console.timeEnd(`${createTime.toLocaleString()}, ${ ip }, 耗时：${ reqUrl }`)
       return end.apply(res, item)
     }
     return req
