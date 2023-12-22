@@ -6,15 +6,15 @@
       <div class="login_form">
         <div class="login_title">登陆</div>
         <div class="form_row">
-          <label>账号: <input type="text" placeholder="输入账号" /></label>
+          <label>账号: <input type="text" v-model="username" placeholder="输入账号" /></label>
         </div>
         <div class="form_row">
-          <label>密码: <input type="password" placeholder="输入密码" /></label>
+          <label>密码: <input type="password" v-model="password" placeholder="输入密码" /></label>
         </div>
         <div class="form_row">记住我: <input type="checkbox" /></div>
         <div class="form_row"><a href="">注册</a> <a href="">忘记密码</a></div>
         <div class="form_row">
-          <button class="login_btn" @click="$router.push('home')">登陆</button>
+          <button class="login_btn" @click="clickLogin">登陆</button>
         </div>
       </div>
     </div>
@@ -22,8 +22,32 @@
 </template>
 <script lang="ts" setup>
 import useDataStore from "../pinia/data";
+import apiCall from '../js/apiCall';
 
-let dataStore = useDataStore();
+import { useRouter } from "vue-router";
+import { ref, inject } from "vue";
+import { Tip } from '../pinia/popup'
+
+const popupStore = inject('popupStore')
+const router = useRouter();
+
+const username = ref("");
+const password = ref("");
+
+const clickLogin = () => {
+  if (!username.value || !password.value) {
+    popupStore.tip('請輸入完整的賬號密碼')
+    console.log(popupStore.tipList)
+    return
+  }
+  apiCall.login({
+    id: 'admin',
+    psw: '123456'
+  }).then(res => {
+    console.log(res)
+    router.push('home')
+  })
+}
 
 setTimeout(() => {}, 2000);
 console.log("当前页面登陆页");

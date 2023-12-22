@@ -68,15 +68,29 @@ class Server {
       // 接口缓存
       let api = this.apiCache[pathname];
       if (!api) {
-       import("./server" + pathname + ".js").then(module => {
-        api = module.default || module;
-        this.apiCache[pathname] = api;
-        api.apply(this, [req, res]);
-       }).catch(err => {
-        next()
-        //  res.statusCode = 404;
-        //  res.end(JSON.stringify(err))
-       })
+        try {
+          await fs.access("./server" + pathname + ".js");
+          import("./server" + pathname + ".js").then(module => {
+            api = module.default || module;
+            this.apiCache[pathname] = api;
+            api.apply(this, [req, res]);
+          }).catch(err => {
+            console.log(err);
+            res.statusCode = 404;
+            res.end('接口错误')
+          })
+        } catch (err) {
+          next() 
+        }
+      //  import("./server" + pathname + ".js").then(module => {
+      //   api = module.default || module;
+      //   this.apiCache[pathname] = api;
+      //   api.apply(this, [req, res]);
+      //  }).catch(err => {
+      //   next()
+      //   //  res.statusCode = 404;
+      //   //  res.end(JSON.stringify(err))
+      //  })
       } else {
         api.apply(this, [req, res]);
       }
