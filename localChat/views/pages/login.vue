@@ -26,7 +26,6 @@ import apiCall from '../js/apiCall';
 
 import { useRouter } from "vue-router";
 import { ref, inject } from "vue";
-import { Tip } from '../pinia/popup'
 
 const popupStore = inject('popupStore')
 const router = useRouter();
@@ -36,8 +35,7 @@ const password = ref("");
 
 const clickLogin = () => {
   if (!username.value || !password.value) {
-    popupStore.tip('請輸入完整的賬號密碼')
-    console.log(popupStore.tipList)
+    popupStore.tip({text: '請輸入完整的賬號密碼', type: 'error'})
     return
   }
   apiCall.login({
@@ -89,7 +87,7 @@ console.log("当前页面登陆页");
       width: 100%;
       height: 100%;
       background: #87ceeb88;
-      filter: blur(10px);
+      filter: blur(10pxdddddddddddddddddddddddd);
     }
     .login_form {
       position: relative;
@@ -106,12 +104,12 @@ console.log("当前页面登陆页");
         margin-bottom: 10px;
         line-height: 32px;
         input:not([type="checkbox"]) {
+          color: #eee;
           &::placeholder {
             color: #efefef;
           }
           height: 32px;
           background: #87ceeb88;
-          
           padding-left: 10px;
           width: 200px;
         }

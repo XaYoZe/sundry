@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div class="manage">
     <div class="home_left_panel">
       <div class="logo"></div>
       <div class="user_info">
@@ -71,7 +71,7 @@ onMounted(async () => {
 
 </script>
 <style lang="scss" scoped>
-.home {
+.manage {
   width: 100%;
   height: 100%;
   background: #eee;

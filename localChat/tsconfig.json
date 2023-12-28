@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
     "module": "CommonJS",
-    "baseUrl": ".",
-    "lib": ["es2016", "dom"],
+    "baseUrl": "./",
+    "moduleResolution": "node",
+    "lib": ["es2016", "dom", "es2022"],
     "types": ["vite/client"],
     "paths": {
       "@cpt/*": ["views/components/*"],
-      "@js": ["views/js"],
-      "@icon": ["node_modules/bootstrap-icons/icons"],
-      "@common":[ "common/"],
-      "@pinia": ["/views/pinia"],
-      "@style": ["/views/assets/style"],
-      "@image": ["/views/assets/image"],
+      "@js/*": ["views/js/*"],
+      "@common/*":[ "common/*"],
+      "@pinia/*": ["views/pinia/*"],
+      "@style/*": ["views/assets/style/*"],
+      "@image/*": ["views/assets/image/*"],
     }
   }
 }

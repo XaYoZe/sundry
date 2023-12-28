@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import "@style/common.scss";
+import { reactive } from 'vue'
 interface Popup {
   id: number // 彈窗id
   name: string // 弹窗名称
@@ -17,6 +19,7 @@ export interface Tip {
   text: string, // 弹窗数据
   event: EventFunction, // 上一个弹窗
   show: boolean
+  type: string
 }
 interface State {
   popupId: number // 彈窗id變量
@@ -70,13 +73,14 @@ export default defineStore('popup', {
         if (typeof config === 'object' && config.onlyOne && this.tipList.some((tip) => config === tip.text || tip.text === config.text)) {
           return
         }
-        let newTip: Tip = {
+        let newTip: Tip = reactive({
           id: this.tipId++,
           duration: 3000,
           text: '', // 弹窗数据
           event: {}, // 上一个弹窗
           show: true,
-        }
+          type: ''
+        })
         if (typeof config === 'string') {
           newTip.text = config
         } else if (typeof config === 'object') {

@@ -3,15 +3,9 @@
   <router-view  v-slot="{ Component }">
     <component :is="Component" />
   </router-view>
-  <PopupCtrl></PopupCtrl>
+  <Teleport to="body">
+    <PopupCtrl></PopupCtrl>
+  </Teleport>
 </template>
-<script lang="ts" setup>
-// import { socket } from '@js/apiCall.js';
-// import { onMounted } from 'vue';
-// onMounted(() => {
-//   console.log(import.meta.glob)
-//   window.socket = socket;
-
-// })
-</script>
+<script lang="ts" setup></script>
 <style scoped lang="scss"></style>

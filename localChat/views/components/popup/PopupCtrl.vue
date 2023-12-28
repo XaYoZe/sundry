@@ -1,6 +1,6 @@
 // 弹窗控制
 <template>
-  <div class="popup_ctrl">
+  <!-- <div class="popup_ctrl">
     <keep-alive :exclude="[]">
       <transition-group :duration="{ enter: 300, leave: 300 }">
         <div
@@ -20,51 +20,46 @@
   </div>
   <div class="tip_ctrl">
     <transition-group :duration="{ enter: 300, leave: 300 }">
-      <div class="tip_info" v-for="tip in tipList" :key="tip.id" v-show="tip.show">{{ tip.text }}</div>
+      <div class="tip_info" v-for="tip in tipList" :key="tip.id" :class="[tip.type]" v-show="tip.show">{{ tip.text }}</div>
     </transition-group>
-  </div>
+  </div> -->
 </template>
-<script setup>
-import usePopupStore from '@pinia/popup'
-import dataStore from '@pinia/data'
-import { computed, ref, reactive, watch, watchEffect, inject, defineAsyncComponent, defineComponent } from 'vue'
+<script lang="ts" setup>
 
-let isSSR = inject('isSSR')
-let popupStore = usePopupStore()
-let popupList = computed(() => popupStore.popupList)
-let tipList = computed(() => popupStore.tipList)
+// import usePopupStore from '@pinia/popup'
+// import dataStore from '@pinia/data'
+// import { computed, ref, reactive, watch, inject } from 'vue'
 
-let transition = []
-let showTransition = (name) => !transition.includes(name)
+// let isSSR = inject('isSSR')
+// let popupStore = usePopupStore()
+// let popupList = computed(() => popupStore.popupList)
+// let tipList = computed(() => popupStore.tipList)
 
-watch(
-  popupList,
-  (val) => {
-    if (!isSSR) {
-      if (val.length) {
-        document.body.style.overflow = 'hidden'
-      } else {
-        document.body.style.overflow = ''
-      }
-    }
-  },
-  { immediate: true, deep: true }
-)
+// let transition = []
+// let showTransition = (name) => !transition.includes(name)
 
-watch(tipList, (val) => {
-  if (!isSSR) {
-    
-  }
-})
+// watch(
+//   popupList,
+//   (val) => {
+//     if (!isSSR) {
+//       if (val.length) {
+//         document.body.style.overflow = 'hidden'
+//       } else {
+//         document.body.style.overflow = ''
+//       }
+//     }
+//   },
+//   { immediate: true, deep: true }
+// )
 
 // 點擊關閉
-const onClose = (id) => {
-  popupStore.close(id)
-};
+// const onClose = (id) => {
+//   popupStore.close(id)
+// };
 
-const clickMask = (id) => {
-  onClose(id)
-}
+// const clickMask = (id) => {
+//   onClose(id)
+// }
 </script>
 <style lang="scss">
 @import '@style/common.scss';
@@ -122,7 +117,8 @@ const clickMask = (id) => {
     padding: 0 20px;
     background: #fff;
     color: #666;
-    transition: transform 0.3s;
+    transition: transform 0.3s, opacity 0.2s;
+    font-weight: 600;
     &.v-enter-from,
     &.v-leave-to {
       opacity: 0;

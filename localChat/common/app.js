@@ -1,4 +1,4 @@
-import { createSSRApp, defineAsyncComponent } from 'vue';
+import { createSSRApp, defineAsyncComponent  } from 'vue';
 import index from '../views/index.vue';
 import createRoute from '../views/router';
 import { createPinia } from 'pinia';
