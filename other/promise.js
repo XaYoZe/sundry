@@ -34,14 +34,12 @@ class Promise1 {
       }
       return this;
     }
-    setTimeout(() => {
-      try {
-        fn(this.resolve.bind(this), this.reject.bind(this));
-        this.state = 'pending';
-      } catch (err) {
-        this.reject(err);
-      }
-    })
+    try {
+      fn(this.resolve.bind(this), this.reject.bind(this));
+      this.state = 'pending';
+    } catch (err) {
+      this.reject(err);
+    }
     return this;
   }
   async callEventList (type, res, index) {
