@@ -34,12 +34,16 @@ import IconSwitch from "../common/IconSwitch.vue";
 const isSSR = inject('isSSR');
 console.log(isSSR)
 let group = ref([
-  { name: "全部", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: Date.now(), newMsg: '1'})), open: false },
-  { name: "群聯", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: Date.now(), newMsg: '1'})) , open: false },
-  { name: "好友1", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: Date.now(), newMsg: '1'})), open: false },
-  { name: "好友2", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: Date.now(), newMsg: '1'})), open: false },
-  { name: "好友3", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: Date.now(), newMsg: '1'})), open: false },
+  { name: "全部", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})), open: false },
+  { name: "群聯", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})) , open: false },
+  { name: "好友1", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})), open: false },
+  { name: "好友2", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})), open: false },
+  { name: "好友3", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})), open: false },
 ]);
+
+onMounted(()=> {
+  // group.value = [];
+})
 
 const swithListShow = (item) => {
   item.open = !item.open;
