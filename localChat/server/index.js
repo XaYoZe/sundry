@@ -3,7 +3,7 @@ import { renderToString } from 'vue/server-renderer'
 
 export async function render (url) {
   let { app, router } = createApp()
-  let name = url.slice(1);
+  let name = url.slice(1).replace(/\?.*/, '');
   if (name !=='' && !router.hasRoute(name)) {
     return Promise.reject('not-router')
   }

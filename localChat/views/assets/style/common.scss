@@ -93,3 +93,43 @@ button {
     transform: translateY(-50%);
   }
 }
+
+.popup {
+  min-width: 500px;
+  min-height: 500px;
+  z-index: 999999;
+  background: #fff;
+  border-radius: 15px;
+  position: relative;
+  .popup_close {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    &:hover {
+      &:after {
+        transform: translate(-50%, -50%) rotate(135deg) scale(1.2);
+      }
+      &::before {
+        transform: translate(-50%, -50%) rotate(45deg) scale(1.2);
+      }
+    }
+    &:after, &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg) scale(1);
+      display: block;
+      width: 2px;
+      height: 120%;
+      border-radius: 1px;
+      background: #666;
+      transition: all 0.3s;
+    }
+    &::before {
+      transform: translate(-50%, -50%) rotate(-45deg) scale(1);
+    }
+  }
+}

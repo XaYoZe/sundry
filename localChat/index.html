@@ -9,4 +9,16 @@
     <div id="app"><!--server-render--></div>
     <script type="module" src="/views/index.ts"></script>
   </body>
+  <script>
+    if (/android|iPhone/i.test(navigator.userAgent)) {
+      let scriptEl = document.createElement('script');
+      scriptEl.src = 'https://unpkg.com/vconsole';
+      scriptEl.addEventListener('load', () => {
+        var vConsole = new window.VConsole();
+        console.log('vConsole', vConsole)
+      })
+      document.body.append(scriptEl);
+      // VConsole 默认会挂载到 `window.VConsole` 上
+    }
+  </script>
 </html>

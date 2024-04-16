@@ -1,8 +1,11 @@
 
   
 // 獲取url參數
-export function getUrlParam(url, searchKey) {
-  let urlObj  = new URL(url);
+export function getUrlParam(searchKey, url) {
+  if (import.meta.env.SSR && !url) {
+    return
+  }
+  let urlObj  = new URL(url || location.href);
   let searchParam = urlObj.searchParams;
   if (searchKey) {
     return searchParam.get(searchKey)
@@ -70,4 +73,17 @@ export function dateFromat (time, text) {
   .replace('H', String(hour).padStart(2, 0))
   .replace('m', String(min).padStart(2, 0))
   .replace('s', String(secode).padStart(2, 0))
+}
+
+export function getUUID () {
+  if (import.meta.env.SSR) {
+    return ''
+  }
+  let uuid = globalThis.localStorage?.getItem('uuid');
+  if (uuid) {
+    return uuid
+  }
+  uuid = Array.from(globalThis?.crypto.getRandomValues(new Uint16Array(4)), item => item.toString(16).padStart(4, '0')).join('-') + '-' + Date.now().toString(16);
+  globalThis.localStorage?.setItem('uuid', uuid);
+  return uuid
 }

@@ -99,6 +99,32 @@ function encodeSocketData(frame) {
   return Buffer.concat(bufArr);
 }
 
+
+let socketObject = {};
+let socketArray = [];
+function sendSocketData (data, targetUUID) {
+  let frame = {
+    // 编码数据并发送给客户端
+    fin: 1, // 用来标识这是消息的最后一段, 一个消息可能分成多段发送
+    rsv: 0, // 默认是0, 用来设置自定义协议, 设置的话双方都必须实现
+    opcode: 2, // 操作码, 用来描述该段消息
+    mask: 0, // 标识是否需要根据掩码做混淆息计算, 如果为1, 那么会有4个字节存储掩码, 服务器向客户端发送数据不用做混淆运算
+    payloadBuffer: Buffer.from(data),
+  }
+  console.log(targetUUID, socketObject[targetUUID]);
+  if (targetUUID) {
+    if (socketObject[targetUUID]) {
+      socketObject[targetUUID].write(encodeSocketData(frame));
+    } else {
+      // socketObject[targetUUID].write(encodeSocketData(frame));
+    }
+  } else {
+    socketArray.forEach(socketItem => {
+      socketItem.write(encodeSocketData(frame));
+    })
+  }
+}
+
 /**
  * 接口处理
  * @this { import('../server.js').default }
@@ -107,25 +133,17 @@ function encodeSocketData(frame) {
  */
 export default function (req, res) {
   var key;
+  let uuid = req.urlParse.query.uuid;
   req.socket.on("connection", (client) => {
     console.log("客户端连接", client);
   });
   // 接收数据
   req.socket.on("data", function (e) {
     let data = decodeSocketData(e);
-    if (data.opcode === 1 || data.opcode=== 2) {
+    if (data.opcode === 1 || data.opcode === 2) {
       let payloadData = proxyDecode(data.payloadData);
-      console.log(data, payloadData);
-      req.socket.write(
-        encodeSocketData({
-          // 编码数据并发送给客户端
-          fin: 1, // 用来标识这是消息的最后一段, 一个消息可能分成多段发送
-          rsv: 0, // 默认是0, 用来设置自定义协议, 设置的话双方都必须实现
-          opcode: 2, // 操作码, 用来描述该段消息
-          mask: 0, // 标识是否需要根据掩码做混淆息计算, 如果为1, 那么会有4个字节存储掩码, 服务器向客户端发送数据不用做混淆运算
-          payloadBuffer: Buffer.alloc(data.payloadLength, data.payloadData),
-        })
-      );
+      console.log(payloadData.uuid, payloadData)
+      sendSocketData(data.payloadData, payloadData.data.uuid)
     }
     // res.socket.write(sendData);
   });
@@ -133,7 +151,8 @@ export default function (req, res) {
   req.socket.on("error", (err) => {
     console.log("连接错误", err);
   });
-  req.socket.on("end", () => {
+  req.socket.on("end", (e) => {
+    delSocketList(uuid)
     console.log("断开连接");
   });
 
@@ -148,4 +167,20 @@ export default function (req, res) {
   res.socket.write("Connection: Upgrade\r\n");
   res.socket.write("Sec-WebSocket-Accept: " + key + "\r\n");
   res.socket.write("\r\n");
+  addSocketList(res.socket, uuid)
+  console.log(Object.keys(socketObject));
+}
+
+function addSocketList (socketItem, name) {
+  socketObject[name] = socketItem;
+  socketArray.push(socketItem);
+}
+
+function delSocketList (name) {
+  let socketItem = socketObject[name];
+  if (socketItem) {
+    socketItem.destroy();
+    socketArray.splice(socketArray.indexOf(socketItem), 1);
+    delete socketObject[name];
+  }
 }

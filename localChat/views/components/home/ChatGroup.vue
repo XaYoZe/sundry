@@ -31,8 +31,6 @@ import { inject, nextTick, onMounted, onServerPrefetch, reactive, ref, Ref } fro
 import { ChatBubbleLeftRightIcon } from "@heroicons/vue/24/outline";
 import IconSwitch from "../common/IconSwitch.vue";
 
-const isSSR = inject('isSSR');
-console.log(isSSR)
 let group = ref([
   { name: "全部", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})), open: false },
   { name: "群聯", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})) , open: false },

@@ -8,7 +8,9 @@
  */
 
 import { proxyEncode, proxyDecode } from '@common';
+import { getUUID } from './common.js'
 
+let uuid = getUUID();
 
 const apiCall = import.meta.env.SSR? {} : new Proxy({}, {
   get (_this, prop) {
@@ -37,10 +39,9 @@ class Socket {
   socket = null;
   eventTarget = new EventTarget();
   eventCache = {};
-  socketUrl = 'ws://localhost:8080/api/socket';
+  socketUrl = `ws://${globalThis.location ? location.host : 'localhost:8080'}/api/socket?uuid=${uuid}`;
   status = 0;
   constructor (url) {
-    console.log('socket');
     url && (this.socketUrl = url);
     this.init();
   }
@@ -48,7 +49,7 @@ class Socket {
 
   }
   init () {
-    if (!import.meta.env.SSR) {
+      if (!import.meta.env.SSR) {
       this.socket = new WebSocket(this.socketUrl);
       this.socket.addEventListener('message', this.onMessage.bind(this), this);
       this.socket.addEventListener('open', this.onOpen.bind(this), this);
@@ -91,7 +92,7 @@ class Socket {
   }
 }
 
-export let socket = new Proxy(new Socket, {
+export const socket = new Proxy(new Socket, {
   get  (_this, prop) {
     // 如果已有方法屬性, 則返回已有方法屬性
     if (_this[prop]) {
@@ -104,9 +105,9 @@ export let socket = new Proxy(new Socket, {
           type: prop,
           data,
         }, options)
-        console.log('发送', prop);
+        console.log('发送' + prop);
         _this.socket.send(proxyEncode(params))
-        return true;
+        return Promise.resolve(true) ;
       }
     }
   }

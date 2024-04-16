@@ -40,8 +40,6 @@ class Server {
   useCall (req, res, index = 0) {
     let useItem = this.useList[index];
     if (useItem) {
-      // console.log(useItem.reg, req.url, useItem.reg.test(req.url))
-      // req.urlParse = urlParse
       if (useItem.reg.test(req.urlParse.pathname)) {
         useItem.cb(req, res, this.useCall.bind(this, req, res, index + 1))
       } else {
@@ -169,11 +167,11 @@ class Server {
     req.socket.remoteAddress ||
     req.connection.socket.remoteAddress || '';
     req.ip = ip;
-    console.time(`${createTime.toLocaleString()}, ${ ip }, 耗时：${ reqUrl }`)
+    // console.time(`${createTime.toLocaleString()}, ${ ip }, 耗时：${ reqUrl }`)
     req.urlParse = url.parse(reqUrl, true);
     let end = res.end;
     res.end = function (...item) {
-      console.timeEnd(`${createTime.toLocaleString()}, ${ ip }, 耗时：${ reqUrl }`)
+      // console.timeEnd(`${createTime.toLocaleString()}, ${ ip }, 耗时：${ reqUrl }`)
       return end.apply(res, item)
     }
     return req

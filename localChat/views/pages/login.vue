@@ -22,12 +22,12 @@
 </template>
 <script lang="ts" setup>
 import useDataStore from "../pinia/data";
-import apiCall from '../js/apiCall';
+import { socket } from '../js/apiCall';
 
 import { useRouter } from "vue-router";
 import { ref, inject } from "vue";
 
-const popupStore = inject('popupStore')
+// const popupStore = inject('popupStore')
 const router = useRouter();
 
 const username = ref("");
@@ -35,15 +35,17 @@ const password = ref("");
 
 const clickLogin = () => {
   if (!username.value || !password.value) {
-    popupStore.tip({text: '請輸入完整的賬號密碼', type: 'error'})
+    // popupStore.tip({text: '請輸入完整的賬號密碼', type: 'error'})
     return
   }
-  apiCall.login({
-    id: 'admin',
-    psw: '123456'
+  socket.login({
+    id: username.value,  // 'admin',
+    psw: password.value // '123456'
   }).then(res => {
-    console.log(res)
+    console.log(11111111, res)
     router.push('home')
+  }).catch(err => {
+    // popupStore.tip({text: err, type: 'error'})
   })
 }
 

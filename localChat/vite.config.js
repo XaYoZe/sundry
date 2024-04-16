@@ -6,6 +6,10 @@ export default defineConfig({
   define: {
     "SERVER_ORIGIN": JSON.stringify('http://127.0.0.1:8080/api/proxy')
   },
+  css: {
+    'devSourcemap': true,
+
+  },
   resolve: {
     alias: {
       'vue': 'vue/dist/vue.esm-bundler.js',

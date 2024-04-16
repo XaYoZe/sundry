@@ -1,104 +1,177 @@
 import { defineStore } from 'pinia'
-import "@style/common.scss";
-import { reactive } from 'vue'
+import type { Store } from 'pinia'
+
+
+
+/**
+ * 彈窗配置
+ */
+interface PopupConfig {
+  /** 只能存在一個相同彈窗 */
+  onlyOne?: boolean
+  /** 動畫效果 */
+  anime?: 'bounce' | 'bottom',
+  /** 透明度 */
+  opacity?: number
+  /** 層級 */
+  zIndex?: number 
+}
+
+/** 彈窗 */
 interface Popup {
-  id: number // 彈窗id
-  name: string // 弹窗名称
-  onlyOne?: boolean // 只能存在一個相同彈窗
-  data?: object // 弹窗数据
-  event?: object // 事件
+  /** 彈窗id */
+  id?: number
+  /** 弹窗名称 */
+  name?: string
+  /** 弹窗数据 */
+  data?: object
+  /** 事件列表 在彈窗對象上使用'on事件名'即可註冊, 觸發在組件上使用$emit('事件名')觸發事件,小寫開頭 */
+  event?: object
+  /** 配置 */
+  option?: PopupConfig,
+  /** 關閉窗口 */
+  close: () => void
 }
 
-interface EventFunction {
-  [key: string]: Function
-}
-export interface Tip {
-  id: number,
-  duration: number,
-  onlyOne?: boolean // 同一時間存在一個相同彈窗 
-  text: string, // 弹窗数据
-  event: EventFunction, // 上一个弹窗
-  show: boolean
-  type: string
-}
-interface State {
-  popupId: number // 彈窗id變量
-  popupList: Array<Popup> // 彈窗列表
-  tipId: number
-  tipList: Array<Tip>
+
+/** 彈窗 */
+interface Toast {
+  /** 彈窗id */
+  id?: number
+  /** 弹窗文案 */
+  text?: string
+  type: '' | 'success' | 'waring' | 'error',
+  /** 配置 */
+  option?: {
+    /** 持續時間 */
+    duration?: number
+  }
 }
 
-export default defineStore('popup', {
-  state: (): State => ({
+const popupStore = defineStore('popup', {
+  state: (): {
+    /** 彈窗id */
+    popupId: number
+    /** 彈窗列表 */
+    popupList: Array<Popup>
+    toastList: Array<Toast>
+  } => ({
     popupId: 1,
     popupList: [],
-    tipId: 1,
-    tipList: [],
+    toastList: [],
   }),
   actions: {
-    // 打開彈窗
-    open(config: string | Popup) {
-      if (typeof config === 'string' || typeof config === 'object') {
-        if (typeof config === 'object' && config.onlyOne && this.popupList.some((popup) => popup.name === config.name)) {
+    /**
+     * 創建彈窗對象
+     * @param popupName 彈窗名, 需要對應組件名
+     * @param popupData 彈窗數據, 在組件中使用props獲取
+     * @param popupConfig 痰喘配置
+     * @returns 彈窗對象
+     */
+    createPopup (popupName: string, popupData:object = {}, popupConfig:PopupConfig):Popup {
+      let popupId = this.popupId++;
+      let popupObj:Popup = {
+        id: popupId,
+        name: popupName, // 弹窗名称
+        option: Object.assign({
+          onlyOne: false, // 只能存在一個
+          opacity: undefined, // 透明度
+          zIndex: undefined, // 層級
+          anime: 'bounce', // 動畫
+        }, popupConfig),
+        data: popupData, // 弹窗数据
+        event: {}, // 事件
+        close: () => { // 關閉窗口
+          this.close(popupId)
+        }
+      }
+      let popupProxy = new Proxy(popupObj, {
+        get(target, p, receiver): Popup | Function {
+          // 返回原有值
+          if (target[p]) {
+            return target[p]
+          }
+          /** 註冊事件 
+          註冊方式 on + 事件名, 例: popup.open('popupName').onToggle(() => {})
+          觸發方式 popupName組件內 $emit觸發事件 $emit('toggle', data);
+          注: 註冊事件名on開頭,觸發事件不需要on小寫開頭
+          **/
+          if (/^on/.test(String(p))) {
+            let eventName = String(p).slice(2).replace(/^(.)/, (val) => val.toLowerCase());
+            return (fn) => {
+              target.event[eventName] = fn.bind(receiver);
+              return receiver
+            };
+          }
           return
-        }
-        let newPopup: Popup = {
-          id: this.popupId++,
-          onlyOne: false,
-          name: '', // 弹窗名称
-          data: {}, // 弹窗数据
-          event: {}, // 上一个弹窗
-        }
-        if (typeof config === 'string') {
-          newPopup.name = config
-        } else if (typeof config === 'object') {
-          newPopup = Object.assign(newPopup, config)
-        }
-        this.popupList.push(newPopup)
-        console.log(this.popupList, newPopup)
+        },
+      })
+      if (!(popupConfig.onlyOne && this.popupList.some((popup) => popup.name === popupName))) {
+        this.popupList.push(popupProxy)
+      }
+      return popupProxy
+    },
+    /** 打開彈窗 */
+    open(popupName: string, popupData:object = {}, popupConfig: PopupConfig = {}):Popup | undefined {
+      if (popupName) {
+        let newPopup: Popup = this.createPopup(popupName, popupData, popupConfig)
+        return newPopup
       }
     },
-    // 關閉彈窗
-    close(id: number = -1) {
-      let index = this.popupList.findIndex((popup) => popup.id === id) || 0
-      this.popupList.splice(index, 1)
+    /** 從底部彈起 */
+    bottom (popupName: string, popupData:object = {}, popupConfig: PopupConfig = {}):Popup | undefined {
+      return this.open(popupName, popupData, Object.assign(popupConfig, {anime: 'bottom'}))
     },
-    // 獲取彈窗數據
-    data(id: number): Popup {
+    /** 關閉彈窗 */
+    close(id: Popup['id'] = -1): Popup | boolean {
+      // 沒有傳id關閉最後一個
+      if (id === -1) {
+        return this.popupList.splice(-1, 1)
+      }
+      // 有id且能找到窗口
+      let index = this.popupList.findIndex((popup) => popup.id === id);
+      if (id > -1 && index > -1) {
+        return this.popupList.splice(index, 1)
+      }
+      return false
+    },
+    /**
+     * toast
+     * @param text 文本
+     * @param config 配置 時長
+     */
+    toast (text, config) {
+      let popupId = this.popupId++;
+      let toastConfig = Object.assign({
+        duration: 3000
+      }, isNaN(config) ? config : {duration: config})
+      let toastObj:Toast = {
+        id: popupId,
+        type: '',
+        text: text, // 弹窗名称
+        option: toastConfig,
+      }
+      this.toastList.push(toastObj);
+      // 固定時長後自動關閉
+      setTimeout(() => {
+        let index = this.toastList.findIndex((toastObj) => toastObj.id === popupId);
+        if (index > -1) {
+          return this.toastList.splice(index, 1)
+        }
+      }, toastObj.option.duration)
+    },
+    /** 獲取彈窗數據 */
+    data(id: number): Popup | null {
       let index = this.popupList.findIndex((popup) => popup.id === id)
-      return this.popupList[index]
+      return index > -1 ?  this.popupList[index] : null
     },
-    tip (config: string | Tip) {
-      if (typeof config === 'string' || typeof config === 'object') {
-        if (typeof config === 'object' && config.onlyOne && this.tipList.some((tip) => config === tip.text || tip.text === config.text)) {
-          return
-        }
-        let newTip: Tip = reactive({
-          id: this.tipId++,
-          duration: 3000,
-          text: '', // 弹窗数据
-          event: {}, // 上一个弹窗
-          show: true,
-          type: ''
-        })
-        if (typeof config === 'string') {
-          newTip.text = config
-        } else if (typeof config === 'object') {
-          newTip = Object.assign(newTip, config)
-        }
-        this.tipList.push(newTip);
-        setTimeout(() => {
-          newTip.show = false;
-          setTimeout(() => {
-            let index = this.tipList.findIndex((tip) => tip.id === newTip.id) || 0
-            this.tipList.splice(index, 1);
-          }, 500)
-        }, newTip.duration)
-        console.log(this.tipList, newTip)
-      }
-    },
-    closeTip (id: number = -1) {
-      
-    }
   },
 })
+
+export default popupStore
+
+export type PopupStore = ReturnType<typeof popupStore>;;
+
+declare module 'vue' {
+  function inject(key: 'popupStore'): PopupStore;
+}

@@ -1,5 +1,6 @@
 
-import querystring from 'node:querystring'
+import querystring from 'node:querystring';
+import { request } from 'http'
 import { proxyEncode, proxyDecode } from '../../common/index.js';
 /**
  * 接口处理

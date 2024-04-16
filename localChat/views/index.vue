@@ -3,9 +3,9 @@
   <router-view  v-slot="{ Component }">
     <component :is="Component" />
   </router-view>
-  <Teleport to="body">
-    <PopupCtrl></PopupCtrl>
-  </Teleport>
+  <PopupCtrl></PopupCtrl>
 </template>
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import PopupCtrl from '@cpt/common/PopupCtrl.vue';
+</script>
 <style scoped lang="scss"></style>
