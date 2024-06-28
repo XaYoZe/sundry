@@ -1,7 +1,8 @@
 const path = require('path'),
   fs = require('fs'),
+  // 使用ast库 https://github.com/riiid/pbkit?tab=readme-ov-file
+  // ast工具 https://astexplorer.net/
   { parse, Statement }  = require('./protoAst/parser/proto')
-
 
 // 查找文件
 function searchFile(dirPath, searchValue, storeArr = [], callback) {
