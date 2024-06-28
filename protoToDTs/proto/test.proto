@@ -1,0 +1,41 @@
+syntax = "proto2";
+option objc_class_prefix = "PB3";
+
+import "proto/common.proto";
+package test;
+
+enum NumType {
+  Num     = 0;    // 个数
+  Hour    = 1;    // 小时
+  Day     = 2;    // 天数
+  Minute  = 3;    // 分钟
+  Forever = 4;    // 永久时长
+}
+
+message TestApiRes {
+  int32 num1 = 1 ;
+  string str1 = 2;
+  bytes bytes1 = 3;
+  bool bool1 = 4 [default = false]; 
+  required NumType numType = 5;
+  repeated int32 num2 = 6;
+  optional string str2 = 7;
+  map<int32, Insert> map = 8;
+  CommonType commonType = 9;
+  message Insert {
+    int32 id = 1;
+    enum InsertEnum {
+      A = 1;
+      B = 2;
+      C = 3;
+    }
+  }
+
+  extensions 1000 to max;
+  
+  reserved 13;
+}
+
+service TestExtObj {
+  rpc TestApi (TestApiReq) returns (TestApiRes);
+}
