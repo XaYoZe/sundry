@@ -2,6 +2,8 @@ syntax = "proto2";
 option objc_class_prefix = "PB3";
 
 import "proto/common.proto";
+import weak "new.proto";
+import "other.proto";
 package test;
 
 enum NumType {
@@ -20,20 +22,34 @@ message TestApiRes {
   required NumType numType = 5;
   repeated int32 num2 = 6;
   optional string str2 = 7;
-  map<int32, Insert> map = 8;
-  CommonType commonType = 9;
+   map<int32, Insert> map = 8;
+  common.CommonType commonType = 9;
   message Insert {
     int32 id = 1;
     enum InsertEnum {
+      option allow_alias = true;
       A = 1;
       B = 2;
       C = 3;
     }
   }
 
+  message Insert2 {
+    int32 id = 1;
+    enum InsertEnum2 {
+      option allow_alias = true;
+      A = 1;
+      B = 2;
+      C = 3;
+    }
+  }
   extensions 1000 to max;
   
   reserved 13;
+}
+
+message TestApiReq {
+  string name = 1;
 }
 
 service TestExtObj {
