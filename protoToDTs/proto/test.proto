@@ -6,6 +6,7 @@ import weak "new.proto";
 import "other.proto";
 package test;
 
+// 上边
 enum NumType {
   Num     = 0;    // 个数
   Hour    = 1;    // 小时
@@ -13,6 +14,9 @@ enum NumType {
   Minute  = 3;    // 分钟
   Forever = 4;    // 永久时长
 }
+/** 隔
+一
+行 **/
 
 message TestApiRes {
   int32 num1 = 1 ;
@@ -24,6 +28,9 @@ message TestApiRes {
   optional string str2 = 7;
    map<int32, Insert> map = 8;
   common.CommonType commonType = 9;
+  /** 
+    插入内容
+  */
   message Insert {
     int32 id = 1;
     enum InsertEnum {
