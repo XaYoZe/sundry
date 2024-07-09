@@ -1,8 +1,12 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "typeRoots": []
+    "typeRoots": [],
+    "lib": ["es2016", "dom", "es2022"],
+    "paths": {
+      "@apiCall": ["./apiCall"]
+    }
   },
-  "include": ["proto/index.d.ts"],
+  "include": ["index.ts"],
   "exclude": ["node_modules"]
 }

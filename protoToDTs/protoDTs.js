@@ -11,8 +11,11 @@ function searchFile(dirPath, searchValue, storeArr = [], callback) {
     const filePath = path.join(dirPath, dirent.name)
     if (dirent.isFile()) {
       if (!searchValue || (searchValue && searchValue.test(filePath))) {
-        callback && callback(filePath)
-        storeArr.push(filePath)
+        if (callback) {
+          storeArr.push(callback(filePath))
+        } else {
+          storeArr.push(filePath)
+        }
       }
     } else {
       searchFile(filePath, searchValue, storeArr, callback)
@@ -21,9 +24,7 @@ function searchFile(dirPath, searchValue, storeArr = [], callback) {
   return storeArr
 }
 
-const protoList = [];
-const protoPath = path.resolve('./proto');
-searchFile(protoPath, /.proto$/, protoList);
+
 class ProtoAstToDTs {
   static FeildType = {
     int32: 'number',
@@ -55,7 +56,9 @@ class ProtoAstToDTs {
       ast: null,
       dTsStr: '',
       packageName: '',
-      filePath: filePath
+      filePath: filePath,
+      relativePath: `./${path.relative(this.protoPath, filePath).replace(/\\/g, '/')}`,
+      service: ''
     };
     const ast = parse(text);
     let filePathParse = path.parse(filePath);
@@ -93,12 +96,14 @@ class ProtoAstToDTs {
       }
       } else if (item.type === 'service') {
         dTsStrArr = dTsStrArr.concat(this.createService(item, 1))
+        service = item.serviceName.text;
       } else if (item.type === 'message') {
         dTsStrArr = dTsStrArr.concat(this.createMessage(item, 1))
       } else if (item.type === 'enum') {
         dTsStrArr = dTsStrArr.concat(this.createEnum(item, 1))
       }
     })
+    protoParse.service = service
     protoParse.ast = ast;
     protoParse.dTsStr = [
       ...importList,
@@ -140,6 +145,18 @@ class ProtoAstToDTs {
     })
     return commentTextArr
   }
+  parseFiledText (text) {
+    return text.split('_').map((item, i) => {
+        console.log(item)
+        if (i === 0) {
+            return item
+        } else if (/^[a-zA-Z]/.test(item)) {
+            return `${item[0].toUpperCase()}${item.slice(1)}`
+        } else {
+            return `_${item}`
+        }
+    }).join('')
+  }
   padStartTab (arr, tabIndex) {
     return arr.map((item, i) => {
       return ''.padStart(tabIndex * this.tabSize) + item
@@ -164,7 +181,7 @@ class ProtoAstToDTs {
             if (messageBody.type === 'map-field') {
               let keyType = this.joinText(messageBody.keyType.identOrDots);
               let valueType = this.joinText(messageBody.valueType.identOrDots);
-              keyStr = `${messageBody.mapName.text}`;
+              keyStr = `${this.parseFiledText(messageBody.mapName.text)}`;
               valueStr = `Record<${ProtoAstToDTs.FeildType[keyType] || keyType}, ${ProtoAstToDTs.FeildType[valueType] || valueType}>`
 
               return [
@@ -173,7 +190,7 @@ class ProtoAstToDTs {
               ]
             } else if (messageBody.type === 'field') {
               let isRequired = '?';
-              keyStr = `${messageBody.fieldName.text}`;
+              keyStr = `${this.parseFiledText(messageBody.fieldName.text)}`;
               valueStr = this.joinText(messageBody.fieldType.identOrDots);
               if (messageBody.fieldLabel?.type === 'keyword') {
                 if (messageBody.fieldLabel.text === 'required') { // 必填
@@ -189,16 +206,17 @@ class ProtoAstToDTs {
                 `${keyStr}${ isRequired }: ${ProtoAstToDTs.FeildType[valueStr] || valueStr}`
               ]
             } else {
-              console.log('跳过', messageBody)
+              let offset = this.curAst.parser.offsetToColRow(messageBody.keyword.start);
+              console.log('跳过', `${path.relative(__dirname, this.curReadFile)}:${offset.row + 1}:${offset.col + 1}`)
             }
           } catch(err) {
             err
           }
         }
-      }).flat(9).filter(item => !!item), 1),
+      }).flat(1).filter(item => !!item), 1),
       `}\n`,
-      ...insertMssage.map(msgItem => this.createMessage(msgItem)).flat(9),
-      ...insertEnum.map(enumItem => this.createEnum(enumItem)).flat(9),
+      ...insertMssage.map(msgItem => this.createMessage(msgItem)).flat(1),
+      ...insertEnum.map(enumItem => this.createEnum(enumItem)).flat(1),
     ], tabIndex);
   }
   /** @param {import('./protoAst/ast/index').Enum} enumItem  */
@@ -215,39 +233,63 @@ class ProtoAstToDTs {
         } else {
           enumBody
         }
-      }).flat(9).filter(item => !!item), 1),
+      }).flat(1).filter(item => !!item), 1),
       `}\n`
     ], tabIndex);
   }
   /** @param {import('./protoAst/ast/index').Service} serviceItem  */
   createService (serviceItem, tabIndex = 0) {
     return this.padStartTab([
-      `export namespace service {`,
+      `export interface service {`,
       ...this.padStartTab(serviceItem.serviceBody.statements.map(serviceBody => {
         if (serviceBody.type === 'rpc') {
-          return `function ${serviceBody.rpcName.text} (data: ${this.joinText(serviceBody.reqType.messageType.identOrDots)}): ${this.joinText(serviceBody.resType.messageType.identOrDots)};`
+          return [
+            ...this.joinComment(serviceBody),
+            `${serviceBody.rpcName.text}: { requestType: ${this.joinText(serviceBody.reqType.messageType.identOrDots)}, responseType: ${this.joinText(serviceBody.resType.messageType.identOrDots)}};`
+          ]
         } else {
           serviceBody
         }
-      }).filter(item => !!item), 1),
+      }).flat(1).filter(item => !!item), 1),
       `}\n`,
     ], tabIndex)
   }
 }
+
+
+const protoList = [];
+const protoPath = path.resolve('./proto');
 const pbDTs = new ProtoAstToDTs(protoPath);
-protoList.forEach((filePath) => {
+
+searchFile(protoPath, /.proto$/, protoList, (filePath) => {
   const text = fs.readFileSync(filePath, {encoding: 'utf-8'})
   if (!fs.existsSync(protoPath)) {
     fs.mkdirSync(protoPath)
   }
   const protoDTsFilePath = path.join(protoPath, `${filePath.replace(/\\/g, '/').split('/').slice(-1)[0]}.d.ts`);
   const textData = pbDTs.read(text, filePath);
-  fs.writeFileSync(
-    textData.filePath + '.d.ts',
-    textData.dTsStr,
-    {encoding: 'utf-8', 'flag': 'w+'});
-  // console.log(text)
+  fs.writeFileSync(textData.filePath + '.d.ts', textData.dTsStr, {encoding: 'utf-8', 'flag': 'w+'});
+  return textData
+});
+
+
+let entryFile = '';
+let serviceList = [];
+protoList.forEach(item => {
+  if (item.service) {
+    entryFile += `import '${item.relativePath}';\n`
+    item.packageName && serviceList.push(item.packageName + '.service');
+  }
 })
+entryFile += [
+  `declare module '@apiCall' {`,
+  `  type FormatApi<obj extends any> = {`,
+  `    [key in keyof obj]: ApiCallFun<'requestType' extends keyof obj[key] ? obj[key]['requestType'] : any, 'responseType' extends keyof obj[key] ? obj[key]['responseType'] : ''>`,
+  `  }`,
+  `  export interface ApiProxy extends Partial<FormatApi<${serviceList.join('&')}>> {`,
+  `  }`,
+  `}`
+].join('\n');
+console.log(entryFile);
 
-
-
+fs.writeFileSync(path.join(protoPath, 'index.d.ts'), entryFile, {encoding: 'utf-8', 'flag': 'w+'});

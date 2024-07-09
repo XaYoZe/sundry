@@ -8,3 +8,7 @@ enum CommonType {
   B = 2;
   C = 3;
 }
+
+service CommonService {
+  rpc CommonAPi (CommonType) returns (CommonType);
+}

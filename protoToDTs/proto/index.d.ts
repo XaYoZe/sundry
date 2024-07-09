@@ -1,4 +1,9 @@
-import './mizos_protocol/src/main/proto/ac_game_pb/ac_game.ext.proto';
-import './mizos_protocol/src/main/proto/ac_game_pb/game_ufo.ext.proto';
-import './mizos_protocol/src/main/proto/ac_game_pb/game_ufo.int.proto';
-
+import './common.proto';
+import './test.proto';
+declare module '@apiCall' {
+  type FormatApi<obj extends any> = {
+    [key in keyof obj]: ApiCallFun<'requestType' extends keyof obj[key] ? obj[key]['requestType'] : any, 'responseType' extends keyof obj[key] ? obj[key]['responseType'] : ''>
+  }
+  export interface ApiProxy extends Partial<FormatApi<common.service&test.service>> {
+  }
+}

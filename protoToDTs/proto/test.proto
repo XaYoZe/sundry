@@ -60,5 +60,6 @@ message TestApiReq {
 }
 
 service TestExtObj {
+  // 接口測試
   rpc TestApi (TestApiReq) returns (TestApiRes);
 }
