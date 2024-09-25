@@ -1,0 +1,28 @@
+{
+  "__version__": "1.0.5",
+  "general": {
+    "designResolution": {
+      "width": 960,
+      "height": 640,
+      "fitHeight": true
+    }
+  },
+  "custom_joint_texture_layouts": [],
+  "physics": {
+    "collisionGroups": [
+      {
+        "index": 1,
+        "name": "bar"
+      }
+    ],
+    "collisionMatrix": {
+      "0": 1,
+      "1": 2
+    },
+    "defaultMaterial": "e69a05e3-8767-437c-8129-628cc3a10c86",
+    "autoSimulation": true,
+    "gravity": {
+      "y": 0
+    }
+  }
+}

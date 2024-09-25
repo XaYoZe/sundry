@@ -18,7 +18,11 @@ let dataStore = defineStore('data', {
   },
   actions: {
     async createPeer () {
-      this.peer = new RTCPeerConnection();
+      this.peer = new RTCPeerConnection({iceServers: [
+        {
+          urls: "stun:stun.l.google.com:19302"
+        }
+      ]});
       console.log(this.peer);
       this.peer.onicecandidate = (event) => {
         if (event.candidate) {
@@ -75,8 +79,9 @@ let dataStore = defineStore('data', {
       };
       // // 创建SDP offer
       const offer = await this.peer.createOffer();
-      this.offer = offer.toJSON();
+      this.offer = offer;
       this.sendChannel = sendChannel;
+      console.log('-----', offer);
       await this.peer.setLocalDescription(offer);
       socket.on('answer',async ({data}) => {
         console.log('socket answer', data);
@@ -110,3 +115,8 @@ let dataStore = defineStore('data', {
 })
 
 export default dataStore
+
+
+declare module 'vue' {
+  function inject(key: 'dataStore'): ReturnType<typeof dataStore>;
+}
