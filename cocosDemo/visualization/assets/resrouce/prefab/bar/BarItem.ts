@@ -33,9 +33,8 @@ export class BarItem extends Component {
   deboundTimeCache: number = 0;
   deboundTime: number = 0.05;
   start () {
-    this.init()
   }
-  init () {
+  init (index: number = 0) {
     this.topNode = this.node.getChildByName("Top");
     this.topNode.setScale(
       1 * this.widthScale,
@@ -47,11 +46,7 @@ export class BarItem extends Component {
       this.node.scale.x * this.widthScale,
       0
     );
-    this.topNode
-      .getComponent(MeshRenderer)
-      .material
-      // .getRenderMaterial(0)
-      .setProperty("mainColor", this.topColor);
+    this.topNode.getComponent(MeshRenderer).material.setProperty("emissive", this.topColor);
     this.topRigidBody = this.node.getChildByName("Top").getComponent(RigidBody);
     this.topRigidBody.useCCD = true;
     this.topCollider = this.node.getChildByName("Top").getComponent(Collider);
@@ -68,10 +63,7 @@ export class BarItem extends Component {
       this.node.scale.x * this.widthScale
     );
     this.bottomNode.setPosition((1 - this.widthScale) / 2, 0, 0);
-    this.bottomNode
-      .getComponent(MeshRenderer)
-      .material
-      .setProperty("mainColor", this.bottomColor);
+    this.bottomNode.getComponent(MeshRenderer).material.setProperty("emissive", this.bottomColor);
   }
   ParticleNodeList:ParticleSystem[] = []; 
   /** 播放粒子特效 */
