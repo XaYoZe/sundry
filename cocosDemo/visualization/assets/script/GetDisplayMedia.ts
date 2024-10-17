@@ -11,7 +11,7 @@ enum DataType {
 
 enum ViewType {
   BarView = 0,
-  LineCtrl = 1,
+  LineView = 1,
 }
 
 @ccclass("GetDisplayMedia")
@@ -55,6 +55,7 @@ export class GetDisplayMedia extends Component {
 
   start() {
     this.useView = this.node.getChildByName(ViewType[this.ViewType]).getComponent(ViewCommon)
+    this.useView.node.active = true;
     this.deltaTime = Date.now();
     if ((window as any).wallpaperRegisterAudioListener) {
       (window as any).wallpaperRegisterAudioListener(this.wallpaperAudioListener.bind(this));
