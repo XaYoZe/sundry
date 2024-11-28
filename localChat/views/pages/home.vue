@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div class="home_left_panel" v-if="false">
+    <div class="home_left_panel" >
       <div class="logo"></div>
       <div class="user_info">
         <div class="user_icon"></div>
@@ -52,6 +52,7 @@ onBeforeMount(() => {
 let dataStore = useDataStore();
 let popupStore = inject('popupStore');
 
+
 let active = ref(0);
 
 let group = reactive([
@@ -93,7 +94,7 @@ onMounted(async () => {
     height: 100%;
     width: 0;
     width: 300px;
-    background: #fff;
+    // background: #fff;
     .user_info {
       width: 100%;
       height: 100px;

@@ -19,7 +19,9 @@ class Server {
   port = 8080; // 启动端口
   useList = [];
   defaultPathReg = /.*?/
+  isDev = true
   constructor() {
+    console.log(process);
     this.createServer();
   }
   // 中间件
@@ -49,16 +51,20 @@ class Server {
   }
   // 创建服务
   async createServer() {
-    const vite = await createServer({
-      server: { 
-        middlewareMode: true,
-        fs: {
-          allow: ['./views/', './index.html', './node_modules/', './common']
-        }
-      },
-      appType: "custom",
-    });
-    this.use(vite.middlewares);
+    const allow = this.isDev ? ['./views/', './index.html', './node_modules/', './common'] : [, './dist/'];
+    const entryHtml = path.join(dirPath, this.isDev ? './index.html' : "./dist/index.html")
+    if (this.isDev) {
+      const vite = await createServer({
+        server: { 
+          middlewareMode: true,
+          fs: {
+            allow
+          }
+        },
+        appType: "custom",
+      });
+      this.use(vite.middlewares);
+    }
     
     // 接口处理
     this.use(/^\/api\//, async (req, res, next) => {
@@ -93,14 +99,39 @@ class Server {
         api.apply(this, [req, res]);
       }
     })
+    this.use(/\.(js|css|\w+)$/, async (req, res, next) => {
+      console.log(req.urlParse.pathname, req.headers.accept);
+      for (let i = 0; i < allow.length; i++) {
+        try {
+          let filePath = path.resolve(dirPath, allow[i],'./' + req.urlParse.pathname);
+          let fileRes = null;
+          if (this.fileCache[filePath]) {
+            fileRes = this.fileCache[filePath]
+          } else {
+            fileRes = await fs.readFile(filePath);
+          }
+          if (/\.js$/.test(filePath)) {
+            res.setHeader("Content-Type", "text/javascript");
+          }
+          this.fileCache[req.urlParse.pathname] = fileRes;
+          res.end(fileRes);
+          return
+        } catch (err) {
+          // console.log(err);
+        }
+      }
+      res.statusCode = 404;
+      res.end();
+    })
 
     this.use(/.*/, async (req, res, next) => {
       try {
-        let template = await fs.readFile(path.join(dirPath, "./index.html"), { encoding: "utf-8" });
-        template = await vite.transformIndexHtml(req.url, template)
-        let ssrLoadModule = (await vite.ssrLoadModule('./server/index.js'))
-        let renderer = await ssrLoadModule.render(req.url, {});
-        res.end(template.replace('<!--server-render-->', renderer[0]));
+        if (this.fileCache[req.urlParse.pathname]) {
+          res.end(this.fileCache[req.urlParse.pathname]);
+          return
+        }
+        let template = await fs.readFile(entryHtml, { encoding: "utf-8" });
+        res.end(template);
         return
       } catch (err) {
         console.log(err);
@@ -135,7 +166,7 @@ class Server {
       }
       let fileUrl = req.urlParse.pathname;
       if (/\.js$/.test(fileUrl)) {
-        res.setHeader("Content-Type", "application/javascript");
+        res.setHeader("Content-Type", "text/javascript");
       }
       fileUrl = path.join(dirPath, "./dist", fileUrl);
       try {
@@ -148,14 +179,14 @@ class Server {
         return
       }
     })
+    
     // 启动服务
     this.server = http.createServer(async (req, res) => {
       this.parseReqRes(req, res)
       this.useCall(req, res)
-    })
-      .listen(8080, () => {
-        console.log("啟動服務", "http://localhost:8080");
-      });
+    }).listen(this.port, () => {
+      console.log("啟動服務", "http://localhost:" + this.port);
+    });
   }
   // req和res添加修改
   parseReqRes (req, res) {

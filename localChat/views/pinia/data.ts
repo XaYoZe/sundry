@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import popupStore from "./popup";
+import { usePopupStore } from "../components/PopupCtrl";
 import apiCall, { socket } from '@js/apiCall';
 import { getUUID } from '../js/common'
 import { reactive  } from "vue";
@@ -18,11 +18,7 @@ let dataStore = defineStore('data', {
   },
   actions: {
     async createPeer () {
-      this.peer = new RTCPeerConnection({iceServers: [
-        {
-          urls: "stun:stun.l.google.com:19302"
-        }
-      ]});
+      this.peer = new RTCPeerConnection();
       console.log(this.peer);
       this.peer.onicecandidate = (event) => {
         if (event.candidate) {
@@ -100,7 +96,7 @@ let dataStore = defineStore('data', {
     }
   },
   getters: {
-    popup: () => popupStore(),
+    popup: () => usePopupStore(),
     linkParams: (state) => {
       return {
         offer: state.offer,
