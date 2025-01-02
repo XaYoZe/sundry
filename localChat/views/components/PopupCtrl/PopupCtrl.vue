@@ -1,47 +1,37 @@
 <!-- 弹窗控制 -->
 <template>
   <div class="popup_ctrl">
-    <transition-group :duration="duration" @beforeEnter="animeEvent($event, 'beforeEnter')" @afterEnter="animeEvent($event, 'afterEnter')">
-      <!-- 彈窗 -->
+    <Transition
+      v-bind="popupItem.transitionConfig"
+      v-for="popupItem in popupList"
+      :key="popupItem.name"
+    >
       <div
         class="popup_ctrl_mask"
-        @click.stop.self="item.option.maskClose && item.close()"
-        v-for="item in popupList"
-        :key="item.name"
-        :style="[{ '--opacity': item.option.opacity, zIndex: item.option.zIndex || 99999 + item.id }, item.option.maskStyle]"
-        :class="[item.option.anime, item.option.rootClassName]"
+        @click.stop.self="popupItem.option.maskClose && popupItem.close()"
+        :key="popupItem.name"
+        :style="[{ '--opacity': popupItem.option.opacity, zIndex: popupItem.option.zIndex || 99999 + popupItem.id }, popupItem.option.maskStyle]"
+        :class="[popupItem.option.anime]"
+        v-if="popupItem.show"
       >
-        <div class="popup_ctrl_content" v-if="item.name">
-          <Component v-on="item.event" v-bind="item.data" :is="item.name" :popupId="item.id" :ref="item.onRef"></Component>
+        <div class="popup_ctrl_content" v-if="popupItem.name">
+          <Component v-on="popupItem.event" v-bind="popupItem.data" :is="popupItem.name" :popupId="popupItem.id" :ref="popupItem.onRef"></Component>
         </div>
       </div>
-      <!-- toast -->
-      <div class="popup_ctrl_toast" v-for="item in toastList" :key="item.id" :class="item.option.type" :style="{ zIndex: 99999 + item.id }">{{ item.text }}</div>
+    </Transition>
+    <transition-group :duration="300">
+      <div class="popup_ctrl_toast" name="toast" v-for="item in toastList" :key="item.id" :class="item.option.type"  :style="{ zIndex: 99999 + item.id }">{{ item.text }}</div>
     </transition-group>
   </div>
 </template>
 <script setup>
 import { computed, watch, inject, ref, nextTick } from 'vue'
-// import { ORIGIN } from 'UTIL/index'
 
 const popupStore = inject('popupStore')
 // 弹窗列表
 const popupList = computed(() => popupStore.popupList)
 // toast列表
 const toastList = computed(() => popupStore.toastList)
-//
-const lastPopup = computed(() => popupList.value[popupList.value.length - 1])
-/** 動畫時長 */
-const duration = computed(() => {
-  const time = {
-    enter: 300,
-    leave: 300,
-  }
-  if (lastPopup.value?.option?.anime === 'boom') {
-    time.enter = 850
-  }
-  return time
-})
 
 watch(
   popupList,
@@ -55,22 +45,8 @@ watch(
     }
   },
   { immediate: true, deep: true }
-)
+);
 
-// 用於重置apng播放
-let reloadApngCount = 0
-// 調試或者本地運行
-// const isLocal = /^localhost|^(\d{1,3})(\.(\d{1,3})){3}/.test(location.hostname) || /file:|http:/.test(location.protocol)
-const animeEvent = (el, name) => {
-  // boom 播放apng動畫
-  if (lastPopup.value?.option?.anime === 'boom') {
-    if (name === 'beforeEnter') {
-      // el.style.backgroundImage = `url(${isLocal ? ORIGIN : ''}/img/apng/boom.png?v=${reloadApngCount++ % 2})`
-    } else if (name === 'afterEnter') {
-      el.style.backgroundImage = ''
-    }
-  }
-}
 </script>
 <style lang="scss">
 .popup_ctrl {
@@ -90,13 +66,11 @@ const animeEvent = (el, name) => {
     width: 100%;
     height: 100%;
     background: rgba($color: #000000, $alpha: var(--opacity, 0.8));
-    transition: background 0.3s;
     display: flex;
-    &.v-enter-from,
-    &.v-leave-to {
-      background: #00000000!important;
+    &.none {
+      align-items: center;
+      justify-content: center;
     }
-
     // 中间放大
     &.center {
       align-items: center;
@@ -104,8 +78,10 @@ const animeEvent = (el, name) => {
       .popup_ctrl_content {
         transition: transform 0.3s;
       }
-      &.v-enter-from,
-      &.v-leave-to {
+      &-enter-from,
+      &-leave-to {
+        transition: background 0.3s;
+        background: #00000000;
         .popup_ctrl_content {
           transform: scale(0.2);
         }
@@ -118,8 +94,10 @@ const animeEvent = (el, name) => {
       .popup_ctrl_content {
         transition: transform 0.3s;
       }
-      &.v-enter-from,
-      &.v-leave-to {
+      &-enter-from,
+      &-leave-to {
+        transition: background 0.3s;
+        background: #00000000;
         .popup_ctrl_content {
           transform: translateY(100%);
         }
@@ -165,47 +143,22 @@ const animeEvent = (el, name) => {
         animation: bounceEnter 1s linear;
         transition: all 0.3s;
       }
-      // &.v-enter-from,
-      &.v-leave-to {
+
+      &-enter-from,
+      &-leave-to {
+        transition: background 0.3s;
+        background: #00000000;
+      }
+      &-leave-to {
         .popup_ctrl_content {
           animation: bounceLeaver 0.3s linear;
           opacity: 0;
         }
       }
     }
-    // 爆炸效果動畫
-    &.boom {
-      align-items: center;
-      justify-content: center;
-      background-image: none;
-      background: {
-        size: 750px 932px;
-        position: center center;
-        repeat: no-repeat;
-      }
-      .popup_ctrl_content {
-        transition: transform 0.3s linear 0.5s, opacity 0.3s linear 0.5s;
-      }
-      &.v-enter-from {
-        .popup_ctrl_content {
-          opacity: 0;
-          transform: scale(0.2);
-        }
-      }
-      &.v-enter-active {
-      }
-      &.v-leave-to {
-        .popup_ctrl_content {
-          transition: transform 0.3s, opacity 0.3s;
-          opacity: 0;
-          transform: scale(0.2);
-        }
-      }
-    }
   }
 
   // toast樣式
-  
   
   .popup_ctrl_toast {
     pointer-events: auto;
@@ -225,8 +178,8 @@ const animeEvent = (el, name) => {
     color: #666;
     transition: transform 0.3s, opacity 0.2s;
     font-weight: 600;
-    &.v-enter-from,
-    &.v-leave-to {
+    &.toast-enter-from,
+    &.toast-leave-to {
       opacity: 0;
       transform: translate(-50%, -100%);
     }
@@ -243,31 +196,5 @@ const animeEvent = (el, name) => {
       color: #fff;
     }
   }
-  // .popup_ctrl_toast {
-  //   pointer-events: auto;
-  //   user-select: none;
-  //   position: fixed;
-  //   top: 50%;
-  //   left: 50%;
-  //   transform: translate(-50%, -50%);
-  //   width: max-content;
-  //   max-width: 70%;
-  //   min-width: 250px;
-  //   background: rgba($color: #000, $alpha: var(--opacity, 0.8));
-  //   font-size: 28px;
-  //   font-weight: 400;
-  //   line-height: 32px;
-  //   color: #ffff;
-  //   padding: 14px 40px;
-  //   border-radius: 10px;
-  //   word-break: break-word;
-  //   text-align: center;
-  //   opacity: 1;
-  //   transition: 0.3s opacity;
-  //   &.v-enter-from,
-  //   &.v-leave-to {
-  //     opacity: 0;
-  //   }
-  // }
 }
 </style>

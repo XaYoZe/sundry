@@ -16,12 +16,11 @@ class Server {
   apiCache = {}; // 接口方法缓存
   fileCache = {}; // 文件缓存
   store = store;
-  port = 8080; // 启动端口
+  port = 8081; // 启动端口
   useList = [];
   defaultPathReg = /.*?/
   isDev = true
   constructor() {
-    console.log(process);
     this.createServer();
   }
   // 中间件
@@ -126,11 +125,12 @@ class Server {
 
     this.use(/.*/, async (req, res, next) => {
       try {
-        if (this.fileCache[req.urlParse.pathname]) {
-          res.end(this.fileCache[req.urlParse.pathname]);
-          return
+        let template = this.fileCache[req.urlParse.pathname];
+        if (!template) {
+          template = await fs.readFile(entryHtml, { encoding: "utf-8" });
+          this.fileCache[req.urlParse.pathname] = template;
         }
-        let template = await fs.readFile(entryHtml, { encoding: "utf-8" });
+        res.setHeader('Cache-Control', 'public, max-age=3600');
         res.end(template);
         return
       } catch (err) {

@@ -21,7 +21,6 @@ export default function (req, res) {
     subRes.write(`data: ${JSON.stringify(data)}`);
     subRes.write("\n\n");
   });
-  this.
   // sendData(roomId, userId, text);
   res.end();
 };

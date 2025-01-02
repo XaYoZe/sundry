@@ -1,11 +1,7 @@
-import { DefineComponent, reactive, ref, ComputedOptions, MethodOptions, EmitsOptions, PropType, StyleValue } from 'vue'
+import { DefineComponent, reactive, ref, nextTick, ComputedOptions, MethodOptions, EmitsOptions, TransitionProps, PropType, StyleValue } from 'vue'
 import { PopupComponent } from './index'
 
-let actName = 'actName';
-if (!import.meta.env.SSR) {
-  actName = location?.pathname.match(/\/([^\/]+)\/(?:index\.html)$/)?.[1] || 'actName'
-}
-
+let projName = 'projName';
 
 /**
  * 彈窗配置
@@ -18,7 +14,7 @@ export interface PopupConfig {
    * - bottom: 從底部彈起
    * - boom: 爆炸效果
    */
-  anime?: 'bounce' | 'bottom' | 'boom'
+  anime?: 'bounce' | 'bottom' | 'boom' | 'none'
   /** 透明度 */
   opacity?: number
   /** 層級 */
@@ -122,6 +118,7 @@ class PopupObject<Name extends PopupNames> {
     }
     return target
   }
+  show = ref(false)
   /** 彈窗id */
   id: number
   /** 弹窗名称 */
@@ -132,6 +129,7 @@ class PopupObject<Name extends PopupNames> {
   ref: InstanceType<PopupComponent[Name]>
   /** disabled */
   disabled = false
+  transitionConfig: TransitionProps = {}
   /** 配置 */
   option: PopupConfig = {
     maskClose: false, // 點擊遮罩關閉
@@ -163,8 +161,28 @@ class PopupObject<Name extends PopupNames> {
     this.name = name
     this.option = PopupObject.deepMerge(this.option, option || {})
     this.data = props // 弹窗数据
+    this.initTransitionConfig();
     this.closeCtrlFn = closeCtrlFn
     this.emitCloseIdFn = emitCloseIdFn
+  }
+  /** 初始化彈窗動畫參數 */
+  initTransitionConfig () {
+    let name = this.option.anime;
+    let duration:TransitionProps['duration'] = {
+      enter: 300,
+      leave: 300
+    };
+    if (name === 'boom') {
+      duration.enter = 850;
+    } else if (name === 'none') {
+      duration.enter = 0;
+      duration.leave = 0;
+    }
+    
+    this.transitionConfig = {
+      name,
+      duration
+    }
   }
   /**
    * 註冊監聽$emit事件, 返回promise
@@ -289,7 +307,8 @@ class PopupObject<Name extends PopupNames> {
    * @param {PopupConfig} config 彈窗配置
    */
   config (config: PopupConfig) {
-    this.option = PopupObject.deepMerge(this.option, config || {})
+    this.option = PopupObject.deepMerge(this.option, config || {});
+    this.initTransitionConfig();
     return this
   }
 }
@@ -297,7 +316,6 @@ class PopupObject<Name extends PopupNames> {
 type ToastConfig = {
   /** 持續時間 */
   duration?: number
-  type?:  'success' | 'waring' | 'error' | ''
 }
 /** toast */
 class ToastObject {
@@ -308,20 +326,17 @@ class ToastObject {
   option: ToastConfig = {
     /** 持續時間 */
     duration: 3000,
-    type: ''
   }
-  timer: any = null;
+  timer = null
   /** 窗口控制方法掛載 */
   private closeCtrlFn = (any) => undefined
-  constructor(id: number, text: string, option: ToastConfig | number | string = {}, addCloseCtrlFn) {
+  constructor(id: number, text: string, option: ToastConfig | number = {}, addCloseCtrlFn) {
     this.id = id
     this.text = text
     this.closeCtrlFn = addCloseCtrlFn
     // 只傳入數字則為持續時間
     if (typeof option === 'number') {
       this.option = PopupObject.deepMerge(this.option, { duration: option })
-    } else if (typeof option === 'string') {
-      this.option = PopupObject.deepMerge(this.option, { type: option })
     } else {
       this.option = PopupObject.deepMerge(this.option, option || {})
     }
@@ -401,7 +416,15 @@ function createPopupStore() {
       }
     })
     popupObject.disabled = !show
-    show && popupList.push(popupObject)
+    if (show) {
+      setTimeout(() => {
+        popupList.push(popupObject);
+        nextTick(() => {
+          popupObject.show.value = true;
+          // (popupObject.show.value as any) = true;
+        })
+      })
+    }
     return popupObject
   }
 
@@ -432,7 +455,7 @@ function createPopupStore() {
    * @returns {PopupObject} 彈窗對象
    */
   function daily<Name extends string>(popupName: Name | PopupNames, popupData?: Props<Name>, popupConfig: PopupConfig = {}): PopupObject<FormatName<Name>> {
-    const storeName = `${actName}_${popupName}_daily_open_time`
+    const storeName = `${projName}_${popupName}_daily_open_time`
     const prevDayTime = localStorage.getItem(storeName) || 0
     const curDayTime = new Date().setHours(0, 0, 0, 0)
     // 超過今天0點
@@ -454,7 +477,7 @@ function createPopupStore() {
    * @returns {PopupObject} 彈窗對象
    */
   function once<Name extends string>(popupName: Name | PopupNames, popupData?: Props<Name>, popupConfig: PopupConfig = {}): PopupObject<FormatName<Name>> {
-    const storeName = `${actName}_${popupName}_once`
+    const storeName = `${projName}_${popupName}_once`
     const storeVal = localStorage.getItem(storeName)
     // 超過今天0點
     // localStorage.setItem(storeName, '1');
@@ -483,7 +506,12 @@ function createPopupStore() {
     } else {
       const index = popupList.findIndex((popup) => popup.id === id)
       if (index > -1) {
-        ;[popup] = popupList.splice(index, 1)
+        console.log(popupList[index].show);
+        popup = popupList[index];
+        (popup.show as any) = false;
+        nextTick(() => {
+          popupList.splice(index, 1)
+        })
       }
     }
     return popup
@@ -494,7 +522,7 @@ function createPopupStore() {
    * @param text 文本
    * @param config 配置 時長
    */
-  function toast(text: string, config: ToastConfig | number | string = ''): ToastObject {
+  function toast(text: string, config: ToastConfig | number = null): ToastObject {
     const toastId = popupIndex.value++
     const toastObject = new ToastObject(toastId, text, config, () => {
       const index = toastList.findIndex((toastObj) => toastObj.id === toastId)

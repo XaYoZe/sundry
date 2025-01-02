@@ -12,15 +12,19 @@ export default function (req, res) {
   res.setHeader("Content-Type", "text/event-stream");
   if (roomId) {
     // 加入房間
-    ((this.store.subList || (this.store.subList = {}))[roomId] || (this.store.subList[roomId] = [])).push(res);
+    let subList = this.store.subList;
+    if (!subList) {
+      subList = this.store.subList = {[roomId]: []};
+    }
+    subList[roomId].push(res);
+    // ((this.store.subList || (this.store.subList = {}))[roomId] || (this.store.subList[roomId] = [])).push(res);
     // if (!this.store.subList) {
     //   this.store.subList.push
     // }
     // !this.store.subList && (this.store.subList[roomId] = [])
     // 退出房間
     res.on("close", () => {
-      console.log("關閉連接");
-      this.store.subList[roomId].splice(this.store.subList[roomId].indexOf(res), 1);
+      subList[roomId].splice(subList[roomId].indexOf(res), 1);
     });
     // 加入房間
     // this.store.subList[roomId].push(res);
