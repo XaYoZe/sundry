@@ -27,7 +27,7 @@ import { socket } from '../js/apiCall';
 import { useRouter } from "vue-router";
 import { ref, inject } from "vue";
 
-// const popupStore = inject('popupStore')
+const popupStore = inject('popupStore')
 const router = useRouter();
 
 const username = ref("");
@@ -35,7 +35,7 @@ const password = ref("");
 
 const clickLogin = () => {
   if (!username.value || !password.value) {
-    // popupStore.tip({text: '請輸入完整的賬號密碼', type: 'error'})
+    popupStore.toast('請輸入完整的賬號密碼', 'error');
     return
   }
   socket.login({
@@ -66,21 +66,21 @@ console.log("当前页面登陆页");
   width: 100%;
   height: 100%;
   display: flex;
+  align-items: center;
   .login_left_panel {
-    width: calc(100% - 300px);
-    height: 100%;
+    width: auto;
+    flex: 1;
   }
   .login_right_panel {
+    margin-right: 10px;
     width: 300px;
-    height: 100%;
+    height: calc(100% - 20px);
+    border-radius: 15px;
     font-weight: 600;
     color: #fff;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    padding-top: 300px;
     position: relative;
+    align-items: center;
     &:after {
       content: "";
       position: absolute;
@@ -89,7 +89,7 @@ console.log("当前页面登陆页");
       width: 100%;
       height: 100%;
       background: #87ceeb88;
-      filter: blur(10pxdddddddddddddddddddddddd);
+      filter: blur(10px);
     }
     .login_form {
       position: relative;

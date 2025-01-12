@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div class="home_left_panel" v-if="false">
+    <div class="home_left_panel" v-show="false">
       <div class="logo"></div>
       <div class="user_info">
         <div class="user_icon"></div>
@@ -43,9 +43,9 @@ import useDataStore from '@pinia/data'
 import apiCall, { socket } from '@js/apiCall';
 
 onBeforeMount(() => {
-  // apiCall.getData({"id": 100143}).then(res => {
-  //   console.log(res);
-  // })
+  apiCall.getData({"id": 100143}).then(res => {
+    console.log('123456', res);
+  })
 });
 
 
@@ -70,7 +70,7 @@ onMounted(async () => {
   if (offer && candidate) {
     dataStore.createSender(JSON.parse(offer), JSON.parse(candidate), uuid)
   } else {
-    popupStore.open('PopupLink');
+    // popupStore.open('PopupLink');
   }
   if (!data.value) {
     // setTimeout(() => {
@@ -79,7 +79,6 @@ onMounted(async () => {
   }
   // console.log(await chrome.windows.getCurrent({populate: true}))
   // console.log(await chrome.tabs.query({ active: true, lastFocusedWindow: true }))
-  
 })
 
 </script>
@@ -93,7 +92,7 @@ onMounted(async () => {
     height: 100%;
     width: 0;
     width: 300px;
-    background: #fff;
+    // background: #fff;
     .user_info {
       width: 100%;
       height: 100px;

@@ -48,13 +48,18 @@ const store = new Proxy({
       let proxy = new Proxy(newVal, {
         set (_this, _prop, _value) {
           let _oldVal = _this[_prop];
-          let _newVal = _that.deepProxy(`${prop}.${_prop}`, _value, _oldVal, call);
-          _this[_prop] = _newVal;
-          // 在监听列表中才调用
-          if (_that._deepWatchList.includes(`${prop}`) && _oldVal !== _newVal) {
-            call && call(_newVal, _oldVal)
+          if (Object.getOwnPropertyDescriptor(newVal, _prop)?.writable !== false) {
+            let _newVal = _that.deepProxy(`${prop}.${_prop}`, _value, _oldVal, call);
+            _this[_prop] = _newVal;
+            // 在监听列表中才调用
+            if (_that._deepWatchList.includes(`${prop}`) && _oldVal !== _newVal) {
+              call && call(_newVal, _oldVal)
+            } 
+            return _value
+          } else {
+            console.log(prop)
+            return false;
           }
-          return _value
         }
       })
       for (let key in newVal) {

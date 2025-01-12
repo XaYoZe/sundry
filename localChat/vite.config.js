@@ -8,7 +8,6 @@ export default defineConfig({
   },
   css: {
     'devSourcemap': true,
-
   },
   resolve: {
     alias: {
@@ -29,11 +28,7 @@ export default defineConfig({
     }
   },
   build: {
-    sourcemap: "inline",
-    watch: {
-      clearScreen: true,
-      exclude: ['/views/public/*']
-    }
+    sourcemap: false
   },
   plugins: [vue()],
 })

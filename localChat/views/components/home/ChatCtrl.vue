@@ -8,8 +8,8 @@
     <div class="chat_send">
       <div class="send_btn" @click="onSend(text)">发送</div>
     </div>
-    <!-- <div class="chat_send"> -->
-      <!-- <div>
+    <div class="chat_send">
+      <div>
         <div>被连接端</div>
         <div class="send_btn" @click="onStart">start</div>
         <div class="send_btn" @click="onAnswer(text)">answer</div>
@@ -18,12 +18,11 @@
         <div>连接端</div>
         <div class="send_btn" @click="onOffer(text)">offer</div>
         <div class="send_btn" @click="onCandidate(text)">candidate</div>
-      </div> -->
-      <!-- <div class="send_btn" @click="onSend(text)">send</div> -->
-    <!-- </div> -->
+      </div>
+    </div>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import apiCall, { socket } from '@js/apiCall';
 import { ref, onMounted, inject } from 'vue';
 
@@ -37,14 +36,34 @@ const confrim = () => {
 }
 
 
-let pc = null;
-let sendChannel = null;
+let pc:RTCPeerConnection = null;
+let sendChannel:RTCDataChannel = null;
 let receiveChannel = null;
 
 function createPeerConnection() {
-  pc = new RTCPeerConnection();
+  pc = new RTCPeerConnection({
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' } // 使用公共 STUN 服务器
+    ]
+  });
+  pc.addEventListener("icegatheringstatechange", (ev) => {
+  switch (pc.iceGatheringState) {
+    case "new":
+      console.log('new', ev)
+      /* gathering is either just starting or has been reset */
+      break;
+    case "gathering":
+      console.log('gathering', ev)
+      /* gathering has begun or is ongoing */
+      break;
+    case "complete":
+      console.log('complete', ev)
+      /* gathering has ended */
+      break;
+  }
+});
   pc.onicecandidate = e => {
-    const message = {
+    const message:Record<string, any> = {
       type: 'candidate',
       candidate: null,
     };
@@ -79,7 +98,6 @@ function onSendChannelMessageCallback(event) {
 }
 
 const onStart = async () => {
-  console.log('cccc')
   await createPeerConnection();
   sendChannel = pc.createDataChannel('sendDataChannel');
   sendChannel.onopen = onSendChannelStateChange;
@@ -88,7 +106,7 @@ const onStart = async () => {
 
   const offer = await pc.createOffer();
   // signaling.postMessage({type: 'offer', sdp: offer.sdp});
-  console.log(offer.toJSON());
+  console.log(offer);
   await pc.setLocalDescription(offer);
 }
 
@@ -155,6 +173,7 @@ const onCandidate = async (candidate) => {
 
 function onSend(data) {
   dataStore.sendData(data);
+  sendChannel.send(data);
   // console.log('Sent Data: ' + data);
 }
 

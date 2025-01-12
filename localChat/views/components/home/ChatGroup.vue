@@ -1,7 +1,7 @@
 <!-- 聊天分组 -->
 <template>
   <div class="chat_group">
-    <div class="group_item" ref="groupItem"  v-for="(groupData, i) in group" :key="groupData.name">
+    <div class="group_item" ref="groupItem"  v-for="(groupData, i) in group" :key="groupData.name" @drop.stop="onDrop($event, i)" @dragover.prevent>
       <div class="group_table" @click="swithListShow(groupData)">
         <div class="group_icon"><ChatBubbleLeftRightIcon /></div>
         {{ groupData.name }}
@@ -11,10 +11,10 @@
       </div>
       <div class="group_list" :class="{ open: groupData.open }">
         <div class="group_hide">
-          <div class="chat_item" v-for="(item, i) in groupData.list" :key="i">
+          <div class="chat_item" draggable="true" @dragstart="onDragstart($event, `${i}_${x}`)" v-for="(item, x) in groupData.list" :class="{active:  `${i}_${x}` === activeIndex}" :key="i">
             <div class="chat_icon"></div>
             <div class="chat_table">
-              {{ item.name }}
+              {{ item.name }}{{  `${i}_${x}` }}
             </div>
             <div class="chat_tip">
               <div class="last_time">{{ item.lastTime }}</div>
@@ -32,11 +32,11 @@ import { ChatBubbleLeftRightIcon } from "@heroicons/vue/24/outline";
 import IconSwitch from "../common/IconSwitch.vue";
 
 let group = ref([
-  { name: "全部", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})), open: false },
-  { name: "群聯", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})) , open: false },
-  { name: "好友1", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})), open: false },
-  { name: "好友2", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})), open: false },
-  { name: "好友3", list: Array.from(Array(10), (_, i) => ({ name: `好友2`, lastTime: '12-15', newMsg: '1'})), open: false },
+  { name: "全部", list: Array.from(Array(10), (_, i) => ({ name: `好友`, lastTime: '12-15', newMsg: '1'})), open: false },
+  { name: "群聯", list: Array.from(Array(10), (_, i) => ({ name: `好友`, lastTime: '12-15', newMsg: '1'})) , open: false },
+  { name: "好友1", list: Array.from(Array(10), (_, i) => ({ name: `好友`, lastTime: '12-15', newMsg: '1'})), open: false },
+  { name: "好友2", list: Array.from(Array(10), (_, i) => ({ name: `好友`, lastTime: '12-15', newMsg: '1'})), open: false },
+  { name: "好友3", list: Array.from(Array(10), (_, i) => ({ name: `好友`, lastTime: '12-15', newMsg: '1'})), open: false },
 ]);
 
 onMounted(()=> {
@@ -46,6 +46,46 @@ onMounted(()=> {
 const swithListShow = (item) => {
   item.open = !item.open;
 };
+
+const groupItem = ref<HTMLDivElement[]>(null)
+let dropEl:HTMLDivElement = null;
+
+/**
+ * 
+ * @param event {DragEvent}
+ */
+const onDrop = (event:DragEvent, i: number) => {
+  if (dropEl) {
+    groupItem.value[i].querySelector('.group_list .group_hide').appendChild(dropEl);
+    dropEl = null;
+    activeIndex.value = '';
+  } else {
+    console.log(event.dataTransfer, i);
+    Array.from(event.dataTransfer.items, type => {
+      console.log(type)
+      // 实验功能
+      // if (type.getAsFileSystemHandle) {
+      //   type.getAsFileSystemHandle().then(res => {
+      //     console.log('getAsFileSystemHandle', res);
+      //   })
+      // } else
+      if (type.kind == 'file') {
+        console.log('getAsFile', type.getAsFile());
+      } else if (type.kind === 'string') {
+        type.getAsString((res) => {
+          console.log('getAsString', res)
+        })
+      }
+    })
+  }
+  event.preventDefault();
+}
+
+const activeIndex = ref('');
+const onDragstart = (event, i) => {
+  dropEl = event.target
+  activeIndex.value = i;
+}
 
 </script>
 <style lang="scss">
@@ -109,6 +149,9 @@ const swithListShow = (item) => {
       }
       &:hover {
         background: #0002;
+      }
+      &.active {
+        opacity: 0.5;
       }
       .chat_icon {
         height: 40px;

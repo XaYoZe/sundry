@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "typeRoots": [],
+    "lib": ["es2016", "dom", "es2022"],
+    "paths": {
+      "@apiCall": ["./apiCall"]
+    }
+  },
+  "include": ["index.ts"],
+  "exclude": ["node_modules"]
+}

@@ -1,5 +1,5 @@
 <template>
-  <div class="error">
+  <div class="error" >
     <div class="error_bg"></div>
     <div class="error_info">
       <div>404</div>

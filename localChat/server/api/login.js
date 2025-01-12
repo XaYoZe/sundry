@@ -20,7 +20,6 @@ export async function getUserData (id) {
     }
   }
   return userData[id]
-
 }
 
 
@@ -36,7 +35,7 @@ export default async function (req, res) {
   let reqUrl = url.parse(req.url, true);
   let { id, psw, token } = reqUrl.query;
   let data = await getUserData(id);
-  console.log(data.psw, psw)
+  console.log(data, psw)
   if (data && psw === data.psw) {
     let token = await getToken(id, id)
     res.end(JSON.stringify({token, ...data}));

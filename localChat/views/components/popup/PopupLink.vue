@@ -34,7 +34,7 @@ watch(linkParams, (val) => {
       console.error(err)
     })
   }
-})
+}, {immediate: true})
 
 
 </script>

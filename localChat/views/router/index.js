@@ -1,7 +1,7 @@
 import { defineAsyncComponent } from "vue";
-import { createRouter, createMemoryHistory, createWebHistory } from "vue-router";
+import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from "vue-router";
 
-let pages = import.meta.glob(`../pages/*.vue`, { eager: false }); // */
+let pages = import.meta.glob('../pages/*.vue', { eager: false }); // */
 export default () => {
   let routes = [];
   for (let key in pages) {
@@ -12,12 +12,12 @@ export default () => {
       name,
       component,
     });
-    if (name === 'home') {
+    if (name === 'error') {
       routes.push({ path: "/:pathMatch(.*)*", component })
     }
   }
   let router = createRouter({
-    history: import.meta.env.SSR ? createMemoryHistory() : createWebHistory(),
+    history: createWebHistory(),
     routes,
   });
   return router
