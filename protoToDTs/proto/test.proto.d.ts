@@ -1,12 +1,12 @@
 import {common} from "./common.proto";
 export namespace test {
-    export enum NumType {
-      Num = 0,
+export enum NumType {
+  Num = 0,
   Hour = 1,
   Day = 2,
   Minute = 3,
   Forever = 4,
-    }
+}
 export interface TestApiRes {
   num1?: number
   str1?: string
