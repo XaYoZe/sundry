@@ -173,7 +173,7 @@ const onCandidate = async (candidate) => {
 
 function onSend(data) {
   dataStore.sendData(data);
-  sendChannel.send(data);
+  // sendChannel.send(data);
   // console.log('Sent Data: ' + data);
 }
 

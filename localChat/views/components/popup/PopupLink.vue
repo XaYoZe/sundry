@@ -24,7 +24,7 @@ const linkParams = computed(() => dataStore.linkParams);
 watch(linkParams, (val) => {
   console.log('linkParams', val);
   if (val.offer && val.candidate) {
-    let href = `${location.origin}?uuid=${getUUID()}&offer=${encodeURIComponent(JSON.stringify(val.offer))}&candidate=${encodeURIComponent(JSON.stringify(val.candidate))}`;
+    let href = `${location.origin}/home?uuid=${getUUID()}&offer=${encodeURIComponent(JSON.stringify(val.offer))}&candidate=${encodeURIComponent(JSON.stringify(val.candidate))}`;
     console.log(href, val)
     QRCode.toDataURL(href).then(url => {
       qrcodeSrc.value = url;
@@ -34,7 +34,7 @@ watch(linkParams, (val) => {
       console.error(err)
     })
   }
-}, {immediate: true})
+}, {immediate: true, deep: true})
 
 
 </script>

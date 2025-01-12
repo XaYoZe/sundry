@@ -68,9 +68,10 @@ let candidate = getUrlParam('candidate');
 
 onMounted(async () => {
   if (offer && candidate) {
+    console.log(JSON.parse(candidate))
     dataStore.createSender(JSON.parse(offer), JSON.parse(candidate), uuid)
   } else {
-    // popupStore.open('PopupLink');
+    popupStore.open('PopupLink');
   }
   if (!data.value) {
     // setTimeout(() => {

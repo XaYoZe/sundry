@@ -8,7 +8,7 @@ let dataStore = defineStore("data", () => {
   const peer = ref(null);
   const offer = ref(null);
   const answer = ref(null);
-  const candidate = ref(null);
+  const candidate = ref([]);
   const sendChannel = ref(null);
   const sendLog = reactive([]);
   const chatLog = reactive([]);
@@ -23,7 +23,7 @@ let dataStore = defineStore("data", () => {
     console.log("createPeer", peer.value);
     peer.value.onicecandidate = (event) => {
       if (event.candidate) {
-        candidate.value = event.candidate.toJSON();
+        candidate.value.push(event.candidate.toJSON());
       }
       console.log("onicecandidate", event);
     };
@@ -50,33 +50,38 @@ let dataStore = defineStore("data", () => {
     };
     await peer.value.setRemoteDescription(offer);
     const answer = await peer.value.createAnswer();
-    socket.answer({ answer, uuid });
-    console.log(answer);
     await peer.value.setLocalDescription(answer);
-    await peer.value.addIceCandidate(candidate);
+    for (let i in candidate) {
+      await peer.value.addIceCandidate(candidate[i]);
+    }
+    socket.answer({ answer, uuid });
+    // console.log('send', { answer, uuid });
+    // window.socket = socket
+    console.log(answer);
   };
   // 接受端
   const createReceiver = async () => {
     if (peer.value) return;
     createPeer();
     // 创建数据通道
-    let sendChannel = peer.value.createDataChannel("sendDataChannel");
-    sendChannel.onopen = () => {
+    let receiveChannel = peer.value.createDataChannel("sendDataChannel");
+    receiveChannel.onopen = () => {
       popup.toast("连接成功");
       popup.close();
-      console.log("发送通道状态: " + sendChannel.readyState);
+      console.log("发送通道状态: " + receiveChannel.readyState);
     };
-    sendChannel.onclose = () => {
+    receiveChannel.onclose = () => {
       popup.toast("断开连接");
-      console.log("发送通道状态: " + sendChannel.readyState);
+      console.log("发送通道状态: " + receiveChannel.readyState);
     };
-    sendChannel.onmessage = (event) => {
+    receiveChannel.onmessage = (event) => {
       chatLog.push(JSON.parse(event.data));
       console.log("sendChannel 接受消息", event);
     };
     // // 创建SDP offer
     offer.value = await peer.value.createOffer();
-    sendChannel = sendChannel;
+    console.log("sendChannel-----", receiveChannel)
+    sendChannel.value = receiveChannel;
     console.log("-----", offer.value);
     await peer.value.setLocalDescription(offer.value);
     socket.on("answer", async ({ data }) => {
